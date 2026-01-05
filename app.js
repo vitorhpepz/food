@@ -77,7 +77,6 @@ async function analyzeFromText(options = {}) {
   }
 
   textAnalyzeBtn.disabled = true;
-  setLoading(true, 'Recalculando macros pelo texto…');
 
   const weight = numberOrNull(weightEl.value);
 
@@ -99,7 +98,8 @@ async function analyzeFromText(options = {}) {
           ]
         }
       ],
-      apiKey
+      apiKey,
+      'Analisando na OpenAI…'
     );
 
     hydrateFormFromAnalysis(data);
@@ -111,7 +111,6 @@ async function analyzeFromText(options = {}) {
     status(`Erro: ${err.message}`);
   } finally {
     textAnalyzeBtn.disabled = false;
-    setLoading(false);
   }
 }
 
@@ -392,7 +391,8 @@ function startVoiceInput() {
   rec.start();
 }
 
-async function sendOpenAi(messages, apiKey) {
+async function sendOpenAi(messages, apiKey, loadingMessage = 'Analisando na OpenAI…') {
+  setLoading(true, loadingMessage);
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -407,11 +407,13 @@ async function sendOpenAi(messages, apiKey) {
   });
 
   if (!response.ok) {
+    setLoading(false);
     const errText = await response.text();
     throw new Error(errText || 'Falha ao analisar');
   }
 
   const payload = await response.json();
+  setLoading(false);
   const content = payload.choices?.[0]?.message?.content?.trim() || '{}';
   let data = {};
   try {
