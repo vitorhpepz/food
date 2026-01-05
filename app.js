@@ -32,6 +32,7 @@ const importBtn = document.getElementById('import-btn');
 const importFile = document.getElementById('import-file');
 const backupReminder = document.getElementById('backup-reminder');
 const backupLaterBtn = document.getElementById('backup-later-btn');
+const backupStatusText = document.getElementById('backup-status-text');
 const nutriOverlay = document.getElementById('nutri-overlay');
 const closeNutriBtn = document.getElementById('close-nutri-btn');
 const nutriGoal = document.getElementById('nutri-goal');
@@ -77,8 +78,7 @@ exportBtn?.addEventListener('click', exportBackup);
 importBtn?.addEventListener('click', () => importFile?.click());
 importFile?.addEventListener('change', handleImport);
 backupLaterBtn?.addEventListener('click', () => {
-  setBackupSnooze();
-  hideBackupReminder();
+  toggleBackupReminder();
 });
 closeNutriBtn?.addEventListener('click', () => showNutriOverlay(false));
 nutriSendBtn?.addEventListener('click', () => sendNutriQuestion());
@@ -569,8 +569,16 @@ function maybeShowBackupReminder() {
   const snoozeUntil = localStorage.getItem('food-backup-snooze');
   const now = Date.now();
   if (snoozeUntil && now < Number(snoozeUntil)) return;
+  const snooze = localStorage.getItem('food-backup-enabled');
+  const enabled = snooze !== 'off';
+  if (!enabled) {
+    backupReminder.classList.remove('hidden');
+    setBackupStatusText('Lembrete desativado. Clique para ativar semanalmente.');
+    return;
+  }
   if (lastBackup && now - Date.parse(lastBackup) < 7 * 24 * 60 * 60 * 1000) return;
   backupReminder.classList.remove('hidden');
+  setBackupStatusText('Lembrete semanal ativo.');
 }
 
 function hideBackupReminder() {
@@ -581,9 +589,19 @@ function setLastBackupNow() {
   localStorage.setItem('food-last-backup', new Date().toISOString());
 }
 
-function setBackupSnooze() {
-  const day = 24 * 60 * 60 * 1000;
-  localStorage.setItem('food-backup-snooze', String(Date.now() + day));
+function toggleBackupReminder() {
+  const state = localStorage.getItem('food-backup-enabled');
+  if (state === 'off') {
+    localStorage.setItem('food-backup-enabled', 'on');
+    setBackupStatusText('Lembrete semanal ativado.');
+  } else {
+    localStorage.setItem('food-backup-enabled', 'off');
+    setBackupStatusText('Lembrete desativado. Clique para ativar semanalmente.');
+  }
+}
+
+function setBackupStatusText(text) {
+  if (backupStatusText) backupStatusText.textContent = text;
 }
 
 function openNutriWithPeriod(period) {
