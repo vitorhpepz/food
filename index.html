@@ -3,79 +3,80 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Food Monitor</title>
+    <title>Monitor de Comida</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#111820" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div class="deploy-tag">Versão publicada: 2025-01-05 14:45 UTC</div>
     <header>
-      <div class="pill">Food Monitor</div>
-      <p class="subtitle">Snap, detect weight, log macros. Works offline (analysis needs connectivity).</p>
+      <div class="pill">Monitor de Comida</div>
+      <p class="subtitle">Fotografe, detecte o peso na balança, registre macros. Funciona offline (análise precisa de conexão).</p>
       <div class="api-key">
-        <input id="api-key" type="password" placeholder="Enter OpenAI API key (stored locally)" />
-        <button id="save-key-btn" class="button primary small">Save key</button>
+        <input id="api-key" type="password" placeholder="Informe a API key da OpenAI (guardada localmente)" />
+        <button id="save-key-btn" class="button primary small">Salvar chave</button>
         <span id="key-status" class="muted"></span>
       </div>
     </header>
 
     <main>
       <section class="card">
-        <h2>1) Capture</h2>
-        <p class="hint">Use your phone camera. We only send the current photo to OpenAI, nothing is stored on the server.</p>
+        <h2>1) Capturar</h2>
+        <p class="hint">Use a câmera do celular. Só a foto atual vai para a OpenAI, nada é salvo em servidor.</p>
         <label class="button primary">
           <input id="photo-input" type="file" accept="image/*" capture="environment" />
-          Take / pick photo
+          Tirar / escolher foto
         </label>
         <div id="preview" class="preview hidden">
-          <img id="preview-img" alt="Food preview" />
+          <img id="preview-img" alt="Prévia do prato" />
         </div>
-        <button id="analyze-btn" class="button secondary" disabled>Analyze photo</button>
+        <button id="analyze-btn" class="button secondary" disabled>Analisar foto</button>
         <p id="status" class="status"></p>
       </section>
 
       <section class="card">
-        <h2>2) Review & edit</h2>
+        <h2>2) Revisar e editar</h2>
         <div class="field">
-          <label for="foods">Foods</label>
-          <textarea id="foods" rows="3" placeholder="e.g., Grilled chicken, rice, broccoli"></textarea>
+          <label for="foods">Alimentos</label>
+          <textarea id="foods" rows="3" placeholder="ex: frango grelhado, arroz, brócolis"></textarea>
         </div>
         <div class="row">
           <div class="field">
-            <label for="weight">Weight (g)</label>
-            <input id="weight" type="number" inputmode="decimal" placeholder="e.g., 420" />
+            <label for="weight">Peso (g)</label>
+            <input id="weight" type="number" inputmode="decimal" placeholder="ex: 420" />
           </div>
           <div class="field">
-            <label for="notes">Notes</label>
-            <input id="notes" type="text" placeholder="Scale reading? Extras?" />
+            <label for="notes">Notas</label>
+            <input id="notes" type="text" placeholder="Leitura da balança? Extras?" />
           </div>
         </div>
         <div class="row macros">
           <div class="field">
-            <label for="protein">Protein (g)</label>
+            <label for="protein">Proteína (g)</label>
             <input id="protein" type="number" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="carbs">Carbs (g)</label>
+            <label for="carbs">Carbo (g)</label>
             <input id="carbs" type="number" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="fat">Fat (g)</label>
+            <label for="fat">Gordura (g)</label>
             <input id="fat" type="number" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="calories">Calories</label>
+            <label for="calories">Calorias</label>
             <input id="calories" type="number" inputmode="decimal" />
           </div>
         </div>
-        <button id="save-btn" class="button primary">Save entry</button>
+        <button id="save-btn" class="button primary">Salvar registro</button>
       </section>
 
       <section class="card">
-        <h2>3) Today</h2>
+        <h2>3) Hoje</h2>
         <div id="totals" class="totals"></div>
         <ul id="entries" class="entries"></ul>
-        <button id="clear-btn" class="button danger">Clear all local data</button>
+        <button id="clear-btn" class="button danger">Apagar tudo (local)</button>
       </section>
     </main>
 

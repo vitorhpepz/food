@@ -48,18 +48,18 @@ function handlePhoto(e) {
 
 async function analyzePhoto() {
   if (!currentImageData) {
-    status('Add a photo first.');
+    status('Adicione uma foto primeiro.');
     return;
   }
 
   const apiKey = getApiKey();
   if (!apiKey) {
-    status('Add your OpenAI API key above.');
+    status('Informe sua API key da OpenAI acima.');
     return;
   }
 
   analyzeBtn.disabled = true;
-  status('Asking OpenAI…');
+  status('Perguntando para a OpenAI…');
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -87,7 +87,7 @@ async function analyzePhoto() {
             ]
           }
         ],
-        max_tokens: 400
+        max_completion_tokens: 400
       })
     });
 
@@ -106,9 +106,9 @@ async function analyzePhoto() {
     }
 
     hydrateFormFromAnalysis(data);
-    status('Analyzed. Review and adjust if needed.');
+    status('Analisado. Revise e ajuste se precisar.');
   } catch (err) {
-    status(`Error: ${err.message}`);
+    status(`Erro: ${err.message}`);
   } finally {
     analyzeBtn.disabled = false;
   }
@@ -142,7 +142,7 @@ function saveEntry() {
   };
 
   if (!entry.foods) {
-    status('Add food description before saving.');
+    status('Descreva os alimentos antes de salvar.');
     return;
   }
 
@@ -150,15 +150,15 @@ function saveEntry() {
   entries.unshift(entry);
   localStorage.setItem('food-entries', JSON.stringify(entries));
   renderEntries(entries);
-  status('Saved locally.');
+  status('Salvo localmente.');
   clearForm();
 }
 
 function clearAll() {
-  if (!confirm('Delete all local entries?')) return;
+  if (!confirm('Apagar todos os registros locais?')) return;
   localStorage.removeItem('food-entries');
   renderEntries([]);
-  status('Cleared.');
+  status('Tudo apagado.');
 }
 
 function loadEntries() {
@@ -170,7 +170,7 @@ function renderEntries(entries) {
   totalsEl.innerHTML = '';
 
   if (!entries.length) {
-    entriesEl.innerHTML = '<li class="entry">No entries yet.</li>';
+    entriesEl.innerHTML = '<li class="entry">Nenhum registro ainda.</li>';
     return;
   }
 
@@ -196,20 +196,27 @@ function renderEntries(entries) {
       <div class="meta">${date}${entry.weightGrams ? ` • ${entry.weightGrams} g` : ''}${entry.notes ? ` • ${entry.notes}` : ''}</div>
       <div class="foods">${entry.foods}</div>
       <div class="macros">
-        ${renderBadge('Protein', entry.macros?.protein)}
-        ${renderBadge('Carbs', entry.macros?.carbs)}
-        ${renderBadge('Fat', entry.macros?.fat)}
-        ${renderBadge('Calories', entry.macros?.calories)}
+        ${renderBadge('Proteína', entry.macros?.protein)}
+        ${renderBadge('Carbo', entry.macros?.carbs)}
+        ${renderBadge('Gordura', entry.macros?.fat)}
+        ${renderBadge('Calorias', entry.macros?.calories)}
       </div>
     `;
 
     entriesEl.appendChild(li);
   });
 
-  ['protein', 'carbs', 'fat', 'calories'].forEach(key => {
+  const labels = {
+    protein: 'Proteína',
+    carbs: 'Carbo',
+    fat: 'Gordura',
+    calories: 'Calorias'
+  };
+
+  Object.keys(labels).forEach(key => {
     const chip = document.createElement('div');
     chip.className = 'chip';
-    chip.textContent = `${capitalize(key)}: ${Math.round(totals[key])}`;
+    chip.textContent = `${labels[key]}: ${Math.round(totals[key])}`;
     totalsEl.appendChild(chip);
   });
 }
@@ -230,19 +237,19 @@ function getEntries() {
 function saveApiKey() {
   const key = apiKeyInput.value.trim();
   if (!key) {
-    keyStatus.textContent = 'Key cleared.';
+    keyStatus.textContent = 'Chave apagada.';
     localStorage.removeItem('food-api-key');
     return;
   }
   localStorage.setItem('food-api-key', key);
-  keyStatus.textContent = 'Saved locally.';
+  keyStatus.textContent = 'Chave salva localmente.';
 }
 
 function loadApiKey() {
   const key = localStorage.getItem('food-api-key') || '';
   apiKeyInput.value = key;
   if (key) {
-    keyStatus.textContent = 'Key loaded from local storage.';
+    keyStatus.textContent = 'Chave recuperada do armazenamento local.';
     analyzeBtn.disabled = false;
   }
 }
