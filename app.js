@@ -147,11 +147,14 @@ function hydrateFormFromAnalysis(data) {
 }
 
 function saveEntry() {
+  const entryDate = selectedDate || new Date().toISOString().slice(0, 10);
+  const entryCreatedAt = editingId
+    ? getEntries().find(e => e.id === editingId)?.createdAt
+    : new Date(`${entryDate}T00:00:00`).toISOString();
+
   const entry = {
     id: editingId || Date.now(),
-    createdAt: editingId
-      ? getEntries().find(e => e.id === editingId)?.createdAt || new Date().toISOString()
-      : new Date().toISOString(),
+    createdAt: entryCreatedAt || new Date(`${entryDate}T00:00:00`).toISOString(),
     foods: foodsEl.value.trim(),
     weightGrams: numberOrNull(weightEl.value),
     macros: {
