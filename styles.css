@@ -104,16 +104,8 @@ main {
 }
 
 .instructions {
-  padding-left: 1.2rem;
   margin: 0.2rem 0 0;
   color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.instructions li strong {
-  color: var(--text);
 }
 
 .button {
@@ -345,6 +337,13 @@ label.button input {
   border-radius: 12px;
   padding: 0.75rem;
   background: #0f141c;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.entry.new-entry {
+  border-color: var(--accent);
+  box-shadow: 0 12px 30px rgba(53, 196, 141, 0.25);
+  animation: pop-in 0.45s ease;
 }
 
 .entry .meta {
@@ -377,6 +376,17 @@ label.button input {
   background: #192234;
   border: 1px solid #1f2937;
   font-size: 0.9rem;
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0.98);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @media (min-width: 700px) {

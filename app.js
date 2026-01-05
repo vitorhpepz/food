@@ -241,10 +241,10 @@ function saveEntry() {
   }
 
   localStorage.setItem('food-entries', JSON.stringify(entries));
-  renderEntries(entries);
+  renderEntries(entries, entry.id);
   status('Salvo localmente.');
   clearForm();
-  showEditPanel(false);
+  showEditOverlay(false);
 }
 
 function clearAll() {
@@ -254,7 +254,7 @@ function loadEntries() {
   renderEntries(getEntries());
 }
 
-function renderEntries(entries) {
+function renderEntries(entries, highlightId) {
   entriesEl.innerHTML = '';
   totalsEl.innerHTML = '';
 
@@ -277,6 +277,9 @@ function renderEntries(entries) {
 
     const li = document.createElement('li');
     li.className = 'entry';
+    if (highlightId && entry.id === highlightId) {
+      li.classList.add('new-entry');
+    }
     li.dataset.id = entry.id;
     const date = new Date(entry.createdAt || entry.id).toLocaleString();
     const per100 = entry.macros100 || {};
