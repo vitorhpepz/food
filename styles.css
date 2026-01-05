@@ -39,16 +39,6 @@ header {
   letter-spacing: 0.02em;
 }
 
-.subtitle {
-  margin: 0;
-  color: var(--muted);
-  max-width: 40ch;
-}
-
-.edit-panel.collapsed {
-  display: none;
-}
-
 .api-key {
   display: flex;
   gap: 0.5rem;
@@ -69,39 +59,6 @@ header {
 .button.small {
   width: auto;
   padding: 0.6rem 0.9rem;
-}
-
-.loading {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.loading .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: bounce 0.8s infinite alternate;
-}
-
-.loading .dot:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.loading .dot:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes bounce {
-  from {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-  to {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
 }
 
 @keyframes spin {
@@ -138,11 +95,6 @@ main {
   margin-top: 0;
   margin-bottom: 0.4rem;
   font-size: 1.1rem;
-}
-
-.hint {
-  color: var(--muted);
-  margin: 0 0 0.75rem;
 }
 
 .status {
@@ -198,18 +150,6 @@ main {
 
 label.button input {
   display: none;
-}
-
-.preview {
-  margin: 0.7rem 0;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #1f2937;
-}
-
-.preview img {
-  width: 100%;
-  display: block;
 }
 
 .hidden {
@@ -406,11 +346,6 @@ label.button input {
   flex-wrap: wrap;
 }
 
-.entry .actions {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-}
 .entry .badge {
   padding: 0.3rem 0.6rem;
   border-radius: 10px;
