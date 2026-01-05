@@ -8,6 +8,7 @@ const statusEl = document.getElementById('status');
 const apiKeyInput = document.getElementById('api-key');
 const saveKeyBtn = document.getElementById('save-key-btn');
 const keyStatus = document.getElementById('key-status');
+const textAnalyzeBtn = document.getElementById('text-analyze-btn');
 const entriesEl = document.getElementById('entries');
 const totalsEl = document.getElementById('totals');
 
@@ -30,6 +31,7 @@ analyzeBtn.addEventListener('click', analyzePhoto);
 saveBtn.addEventListener('click', saveEntry);
 clearBtn.addEventListener('click', clearAll);
 saveKeyBtn.addEventListener('click', saveApiKey);
+textAnalyzeBtn.addEventListener('click', analyzeFromText);
 weightEl.addEventListener('input', recalcFromPer100);
 [protein100El, carbs100El, fat100El, calories100El].forEach(el =>
   el.addEventListener('input', recalcFromPer100)
@@ -70,55 +72,77 @@ async function analyzePhoto() {
   status('Perguntando para a OpenAI…');
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
+    const data = await sendOpenAi([
+      {
+        role: 'system',
+        content:
+          'Você é um assistente de nutrição. Dada uma foto de comida (geralmente em uma balança), extraia o peso visível em gramas e identifique os alimentos com uma nota curta. Estime macros para a porção da foto. Responda em português. Retorne apenas JSON.'
       },
-      body: JSON.stringify({
-        model: 'gpt-5.2',
-        messages: [
+      {
+        role: 'user',
+        content: [
           {
-            role: 'system',
-            content:
-              'Você é um assistente de nutrição. Dada uma foto de comida (geralmente em uma balança), extraia o peso visível em gramas e identifique os alimentos com uma nota curta. Estime macros para a porção da foto.'
+            type: 'text',
+            text: 'Analise a refeição nesta foto. Retorne SOMENTE JSON com: items (array de {name, note}), weight_grams (número ou null), macros ({protein, carbs, fat, calories}), confidence (0-1).'
           },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Analise a refeição nesta foto. Retorne SOMENTE JSON com: items (array de {name, note}), weight_grams (número ou null), macros ({protein, carbs, fat, calories}), confidence (0-1).'
-              },
-              { type: 'image_url', image_url: { url: currentImageData } }
-            ]
-          }
-        ],
-        max_completion_tokens: 400
-      })
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || 'Falha ao analisar');
-    }
-
-    const payload = await response.json();
-    const content = payload.choices?.[0]?.message?.content?.trim() || '{}';
-    let data = {};
-    try {
-      data = JSON.parse(content);
-    } catch (err) {
-      data = { raw: content, error: 'Não foi possível ler JSON da resposta da OpenAI' };
-    }
-
+          { type: 'image_url', image_url: { url: currentImageData } }
+        ]
+      }
+    ], apiKey);
     hydrateFormFromAnalysis(data);
     status('Analisado. Revise e ajuste se precisar.');
   } catch (err) {
     status(`Erro: ${err.message}`);
   } finally {
     analyzeBtn.disabled = false;
+  }
+}
+
+async function analyzeFromText() {
+  const foods = foodsEl.value.trim();
+  if (!foods) {
+    status('Descreva os alimentos para recalcular.');
+    return;
+  }
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    status('Informe sua API key da OpenAI acima.');
+    return;
+  }
+
+  textAnalyzeBtn.disabled = true;
+  status('Recalculando macros pelo texto…');
+
+  const weight = numberOrNull(weightEl.value);
+
+  try {
+    const data = await sendOpenAi(
+      [
+        {
+          role: 'system',
+          content:
+            'Você é um assistente de nutrição. Com base apenas no texto, estime macros para a refeição descrita. Se houver peso informado, considere-o para estimar a porção. Responda em português e retorne apenas JSON.'
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Refeição: ${foods}. Peso: ${weight ? weight + ' g' : 'desconhecido'}. Retorne SOMENTE JSON com: items (array de {name, note}), weight_grams (número ou null), macros ({protein, carbs, fat, calories}), confidence (0-1).`
+            }
+          ]
+        }
+      ],
+      apiKey
+    );
+
+    hydrateFormFromAnalysis(data);
+    status('Macros recalculadas pelo texto.');
+  } catch (err) {
+    status(`Erro: ${err.message}`);
+  } finally {
+    textAnalyzeBtn.disabled = false;
   }
 }
 
@@ -334,4 +358,35 @@ function backcalcPer100(portionValue, weight) {
   const n = Number(portionValue);
   if (!Number.isFinite(n) || !weight) return '';
   return +(n / weight * 100).toFixed(1);
+}
+
+async function sendOpenAi(messages, apiKey) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-5.2',
+      messages,
+      max_completion_tokens: 400
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || 'Falha ao analisar');
+  }
+
+  const payload = await response.json();
+  const content = payload.choices?.[0]?.message?.content?.trim() || '{}';
+  let data = {};
+  try {
+    data = JSON.parse(content);
+  } catch (err) {
+    data = { raw: content, error: 'Não foi possível ler JSON da resposta da OpenAI' };
+  }
+
+  return data;
 }
