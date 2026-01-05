@@ -14,6 +14,10 @@ const totalsEl = document.getElementById('totals');
 const foodsEl = document.getElementById('foods');
 const weightEl = document.getElementById('weight');
 const notesEl = document.getElementById('notes');
+const protein100El = document.getElementById('protein100');
+const carbs100El = document.getElementById('carbs100');
+const fat100El = document.getElementById('fat100');
+const calories100El = document.getElementById('calories100');
 const proteinEl = document.getElementById('protein');
 const carbsEl = document.getElementById('carbs');
 const fatEl = document.getElementById('fat');
@@ -26,6 +30,10 @@ analyzeBtn.addEventListener('click', analyzePhoto);
 saveBtn.addEventListener('click', saveEntry);
 clearBtn.addEventListener('click', clearAll);
 saveKeyBtn.addEventListener('click', saveApiKey);
+weightEl.addEventListener('input', recalcFromPer100);
+[protein100El, carbs100El, fat100El, calories100El].forEach(el =>
+  el.addEventListener('input', recalcFromPer100)
+);
 
 loadEntries();
 loadApiKey();
@@ -74,14 +82,14 @@ async function analyzePhoto() {
           {
             role: 'system',
             content:
-              'You are a nutrition assistant. Given a photo of food (often on a digital scale), extract the visible scale weight in grams and identify foods with a short note. Estimate macros for the pictured portion.'
+              'Você é um assistente de nutrição. Dada uma foto de comida (geralmente em uma balança), extraia o peso visível em gramas e identifique os alimentos com uma nota curta. Estime macros para a porção da foto.'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Analyze the meal in this photo. Return ONLY JSON with keys: items (array of {name, note}), weight_grams (number or null), macros ({protein, carbs, fat, calories}), and confidence (0-1).'
+                text: 'Analise a refeição nesta foto. Retorne SOMENTE JSON com: items (array de {name, note}), weight_grams (número ou null), macros ({protein, carbs, fat, calories}), confidence (0-1).'
               },
               { type: 'image_url', image_url: { url: currentImageData } }
             ]
@@ -93,7 +101,7 @@ async function analyzePhoto() {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(errText || 'Failed to analyze');
+      throw new Error(errText || 'Falha ao analisar');
     }
 
     const payload = await response.json();
@@ -102,7 +110,7 @@ async function analyzePhoto() {
     try {
       data = JSON.parse(content);
     } catch (err) {
-      data = { raw: content, error: 'Could not parse JSON from OpenAI response' };
+      data = { raw: content, error: 'Não foi possível ler JSON da resposta da OpenAI' };
     }
 
     hydrateFormFromAnalysis(data);
@@ -124,6 +132,14 @@ function hydrateFormFromAnalysis(data) {
   carbsEl.value = data.macros?.carbs ?? '';
   fatEl.value = data.macros?.fat ?? '';
   caloriesEl.value = data.macros?.calories ?? '';
+
+  const weight = numberOrNull(weightEl.value);
+  if (weight && data.macros) {
+    protein100El.value = backcalcPer100(data.macros.protein, weight);
+    carbs100El.value = backcalcPer100(data.macros.carbs, weight);
+    fat100El.value = backcalcPer100(data.macros.fat, weight);
+    calories100El.value = backcalcPer100(data.macros.calories, weight);
+  }
 }
 
 function saveEntry() {
@@ -271,6 +287,10 @@ function clearForm() {
   carbsEl.value = '';
   fatEl.value = '';
   caloriesEl.value = '';
+  protein100El.value = '';
+  carbs100El.value = '';
+  fat100El.value = '';
+  calories100El.value = '';
   preview.classList.add('hidden');
   photoInput.value = '';
   currentImageData = null;
@@ -292,4 +312,26 @@ async function registerServiceWorker() {
   } catch (err) {
     console.warn('SW registration failed', err);
   }
+}
+
+function recalcFromPer100() {
+  const weight = numberOrNull(weightEl.value);
+  if (!weight || weight <= 0) return;
+  const ratio = weight / 100;
+  proteinEl.value = scaleValue(protein100El.value, ratio);
+  carbsEl.value = scaleValue(carbs100El.value, ratio);
+  fatEl.value = scaleValue(fat100El.value, ratio);
+  caloriesEl.value = scaleValue(calories100El.value, ratio);
+}
+
+function scaleValue(val, ratio) {
+  const n = Number(val);
+  if (!Number.isFinite(n)) return '';
+  return +(n * ratio).toFixed(1);
+}
+
+function backcalcPer100(portionValue, weight) {
+  const n = Number(portionValue);
+  if (!Number.isFinite(n) || !weight) return '';
+  return +(n / weight * 100).toFixed(1);
 }

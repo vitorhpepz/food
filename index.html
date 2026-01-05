@@ -51,21 +51,40 @@
             <input id="notes" type="text" placeholder="Leitura da balança? Extras?" />
           </div>
         </div>
+        <p class="muted">Preencha macros por 100g; calculamos a porção pelo peso. Só salvamos os valores calculados.</p>
         <div class="row macros">
           <div class="field">
-            <label for="protein">Proteína (g)</label>
+            <label for="protein100">Proteína (g) / 100g</label>
+            <input id="protein100" type="number" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="carbs100">Carbo (g) / 100g</label>
+            <input id="carbs100" type="number" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="fat100">Gordura (g) / 100g</label>
+            <input id="fat100" type="number" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="calories100">Calorias / 100g</label>
+            <input id="calories100" type="number" inputmode="decimal" />
+          </div>
+        </div>
+        <div class="row macros">
+          <div class="field">
+            <label for="protein">Proteína (g) por porção</label>
             <input id="protein" type="number" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="carbs">Carbo (g)</label>
+            <label for="carbs">Carbo (g) por porção</label>
             <input id="carbs" type="number" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="fat">Gordura (g)</label>
+            <label for="fat">Gordura (g) por porção</label>
             <input id="fat" type="number" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="calories">Calorias</label>
+            <label for="calories">Calorias por porção</label>
             <input id="calories" type="number" inputmode="decimal" />
           </div>
         </div>
