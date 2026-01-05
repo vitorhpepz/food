@@ -136,14 +136,14 @@ async function analyzeFromText(options = {}) {
         {
           role: 'system',
           content:
-            'Você é um assistente de nutrição. Com base apenas no texto, estime macros para a refeição descrita, considerando a tabela TACO. Se houver peso informado, considere-o para estimar a porção. Responda em português e retorne apenas JSON.'
+            'Você é um assistente de nutrição. Com base apenas no texto (pode conter vários alimentos), estime macros considerando a tabela TACO. Retorne SOMENTE JSON com: entries (array de {name, note, weight_grams (number ou null), macros {protein, carbs, fat, calories}}) e confidence (0-1). Um item por alimento.'
         },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: `Refeição: ${foods}. Peso: ${weight ? weight + ' g' : 'desconhecido'}. Retorne SOMENTE JSON com: items (array de {name, note}), weight_grams (número ou null), macros ({protein, carbs, fat, calories}), confidence (0-1).`
+              text: `Refeição: ${foods}. Peso total (se informado): ${weight ? weight + ' g' : 'desconhecido'}.`
             }
           ]
         }
@@ -152,8 +152,21 @@ async function analyzeFromText(options = {}) {
       'Analisando na OpenAI…'
     );
 
-    hydrateFormFromAnalysis(data);
     lastAnalysisData = data;
+
+    if (Array.isArray(data.entries) && data.entries.length > 1) {
+      if (options.autoSave) {
+        addEntriesFromAnalysis(data.entries);
+        return;
+      } else {
+        hydrateFormFromAnalysis(data.entries[0]);
+        setStatus(`Encontrados ${data.entries.length} itens. Ajuste e salve.`);
+        return;
+      }
+    }
+
+    const single = Array.isArray(data.entries) && data.entries.length ? data.entries[0] : data;
+    hydrateFormFromAnalysis(single);
     setStatus('Macros recalculadas pelo texto.');
     if (options.autoSave) {
       saveEntry();
@@ -166,7 +179,7 @@ async function analyzeFromText(options = {}) {
 }
 
 function hydrateFormFromAnalysis(data) {
-  const items = data.items || data.raw?.items || [];
+  const items = data.items || data.raw?.items || data.entries || [];
   const foods = items.map(item => item.name || '').filter(Boolean).join(', ');
   if (foods) {
     foodsEl.value = foods;
@@ -611,6 +624,42 @@ function toggleBackupReminder() {
 
 function setBackupStatusText(text) {
   if (backupStatusText) backupStatusText.textContent = text;
+}
+
+function addEntriesFromAnalysis(entriesData) {
+  const entries = getEntries();
+  const entryDate = selectedDate || new Date().toISOString().slice(0, 10);
+  let lastId = null;
+
+  entriesData.forEach((item, idx) => {
+    const id = Date.now() + idx;
+    lastId = id;
+    entries.unshift({
+      id,
+      createdAt: new Date(`${entryDate}T00:00:00`).toISOString(),
+      foods: item.name || '',
+      weightGrams: numberOrNull(item.weight_grams),
+      macros: {
+        protein: numberOrNull(item.macros?.protein),
+        carbs: numberOrNull(item.macros?.carbs),
+        fat: numberOrNull(item.macros?.fat),
+        calories: numberOrNull(item.macros?.calories)
+      },
+      macros100: {
+        protein: null,
+        carbs: null,
+        fat: null,
+        calories: null
+      },
+      notes: item.note || ''
+    });
+  });
+
+  localStorage.setItem('food-entries', JSON.stringify(entries));
+  renderEntries(entries, lastId);
+  setStatus(`Salvo ${entriesData.length} itens do ditado.`);
+  clearForm();
+  showEditOverlay(false);
 }
 
 function openNutriWithPeriod(period) {

@@ -33,10 +33,11 @@ header {
   align-self: center;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #0d1117;
-  padding: 0.4rem 0.9rem;
+  padding: 0.6rem 1.4rem;
   border-radius: 999px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  font-size: 1.25rem;
 }
 
 .api-key {
