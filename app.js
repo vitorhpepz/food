@@ -11,6 +11,8 @@ const entriesEl = document.getElementById('entries');
 const totalsEl = document.getElementById('totals');
 const editOverlay = document.getElementById('edit-overlay');
 const closeEditBtn = document.getElementById('close-edit-btn');
+const reanalyzeBtn = document.getElementById('reanalyze-btn');
+const reapplyBtn = document.getElementById('reapply-btn');
 const dateFilter = document.getElementById('date-filter');
 
 const foodsEl = document.getElementById('foods');
@@ -29,6 +31,7 @@ const loadingText = document.querySelector('#loading-overlay .loading-text');
 
 let editingId = null;
 let selectedDate = new Date().toISOString().slice(0, 10);
+let lastAnalysisData = null;
 
 saveBtn.addEventListener('click', () => saveEntry());
 saveKeyBtn.addEventListener('click', saveApiKey);
@@ -40,6 +43,15 @@ toggleEditBtn.addEventListener('click', () => {
   showEditOverlay(true);
 });
 closeEditBtn.addEventListener('click', () => showEditOverlay(false));
+reanalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false }));
+reapplyBtn.addEventListener('click', () => {
+  if (!lastAnalysisData) {
+    status('Nenhuma análise recente para aplicar.');
+    return;
+    }
+  hydrateFormFromAnalysis(lastAnalysisData);
+  status('Campos atualizados do último resultado.');
+});
 dateFilter.addEventListener('change', () => {
   selectedDate = dateFilter.value || new Date().toISOString().slice(0, 10);
   renderEntries(getEntries());
@@ -105,6 +117,7 @@ async function analyzeFromText(options = {}) {
     );
 
     hydrateFormFromAnalysis(data);
+    lastAnalysisData = data;
     status('Macros recalculadas pelo texto.');
     if (options.autoSave) {
       saveEntry();
