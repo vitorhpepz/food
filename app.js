@@ -20,6 +20,8 @@ const proteinEl = document.getElementById('protein');
 const carbsEl = document.getElementById('carbs');
 const fatEl = document.getElementById('fat');
 const caloriesEl = document.getElementById('calories');
+const loadingOverlay = document.getElementById('loading-overlay');
+const loadingText = document.querySelector('#loading-overlay .loading-text');
 
 let editingId = null;
 
@@ -115,7 +117,12 @@ function hydrateFormFromAnalysis(data) {
   caloriesEl.value = data.macros?.calories ?? '';
 
   const weight = numberOrNull(weightEl.value);
-  if (weight && data.macros) {
+  if (data.macros100) {
+    protein100El.value = data.macros100.protein ?? '';
+    carbs100El.value = data.macros100.carbs ?? '';
+    fat100El.value = data.macros100.fat ?? '';
+    calories100El.value = data.macros100.calories ?? '';
+  } else if (weight && data.macros) {
     protein100El.value = backcalcPer100(data.macros.protein, weight);
     carbs100El.value = backcalcPer100(data.macros.carbs, weight);
     fat100El.value = backcalcPer100(data.macros.fat, weight);
@@ -136,6 +143,12 @@ function saveEntry() {
       carbs: numberOrNull(carbsEl.value),
       fat: numberOrNull(fatEl.value),
       calories: numberOrNull(caloriesEl.value)
+    },
+    macros100: {
+      protein: numberOrNull(protein100El.value),
+      carbs: numberOrNull(carbs100El.value),
+      fat: numberOrNull(fat100El.value),
+      calories: numberOrNull(calories100El.value)
     },
     notes: notesEl.value.trim()
   };
@@ -197,16 +210,21 @@ function renderEntries(entries) {
     li.className = 'entry';
     li.dataset.id = entry.id;
     const date = new Date(entry.createdAt || entry.id).toLocaleString();
+    const per100 = entry.macros100 || {};
 
     li.innerHTML = `
-      <div class="meta">${date}${entry.weightGrams ? ` • ${entry.weightGrams} g` : ''}${entry.notes ? ` • ${entry.notes}` : ''}</div>
+      <div class="meta">${entry.weightGrams ? `<strong>${entry.weightGrams} g</strong> • ` : ''}${date}</div>
       <div class="foods">${entry.foods}</div>
+      ${entry.notes ? `<div class="muted">${entry.notes}</div>` : ''}
       <div class="macros">
         ${renderBadge('Proteína', entry.macros?.protein)}
         ${renderBadge('Carbo', entry.macros?.carbs)}
         ${renderBadge('Gordura', entry.macros?.fat)}
         ${renderBadge('Calorias', entry.macros?.calories)}
       </div>
+      ${(per100.protein || per100.carbs || per100.fat || per100.calories) ? `
+        <div class="per100-line">Por 100g: ${per100.protein ?? '-'}P • ${per100.carbs ?? '-'}C • ${per100.fat ?? '-'}G • ${per100.calories ?? '-'} kcal</div>
+      ` : ''}
       <div class="muted">Toque para editar</div>
     `;
 
@@ -392,9 +410,10 @@ async function sendOpenAi(messages, apiKey) {
 
 function setLoading(isLoading, message = '') {
   if (isLoading) {
-    statusEl.innerHTML = `<span class="loading">${message || ''} <span class="dot"></span><span class="dot"></span><span class="dot"></span></span>`;
+    loadingOverlay.classList.remove('hidden');
+    if (loadingText) loadingText.textContent = message || 'Carregando…';
   } else {
-    statusEl.textContent = '';
+    loadingOverlay.classList.add('hidden');
   }
 }
 
@@ -410,5 +429,9 @@ function startEditEntry(id) {
   carbsEl.value = entry.macros?.carbs ?? '';
   fatEl.value = entry.macros?.fat ?? '';
   caloriesEl.value = entry.macros?.calories ?? '';
+  protein100El.value = entry.macros100?.protein ?? '';
+  carbs100El.value = entry.macros100?.carbs ?? '';
+  fat100El.value = entry.macros100?.fat ?? '';
+  calories100El.value = entry.macros100?.calories ?? '';
   status('Editando registro selecionado. Salve para aplicar.');
 }

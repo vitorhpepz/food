@@ -98,6 +98,18 @@ header {
     opacity: 1;
   }
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.per100-line {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 .muted {
   color: var(--muted);
   font-size: 0.9rem;
@@ -216,6 +228,38 @@ label.button input {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 999;
+}
+
+.loading-overlay.hidden {
+  display: none;
+}
+
+.spinner {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+
+.loading-text {
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .field label {
