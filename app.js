@@ -236,7 +236,7 @@ function renderEntries(entries) {
         <div class="per100-line">Por 100g: ${per100.protein ?? '-'}P • ${per100.carbs ?? '-'}C • ${per100.fat ?? '-'}G • ${per100.calories ?? '-'} kcal</div>
       ` : ''}
       <div class="actions">
-        <div class="muted">Toque para editar</div>
+        <button class="button secondary small edit-btn" type="button">Editar</button>
         <button class="button danger small delete-btn" type="button">Excluir</button>
       </div>
     `;
