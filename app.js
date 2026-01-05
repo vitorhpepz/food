@@ -4,7 +4,6 @@ const apiKeyInput = document.getElementById('api-key');
 const saveKeyBtn = document.getElementById('save-key-btn');
 const keyStatus = document.getElementById('key-status');
 const textAnalyzeBtn = document.getElementById('text-analyze-btn');
-const voiceBtn = document.getElementById('voice-btn');
 const toggleEditBtn = document.getElementById('toggle-edit-btn');
 const editTitle = document.getElementById('edit-title');
 const entriesEl = document.getElementById('entries');
@@ -56,7 +55,6 @@ let goalsState = loadGoals();
 saveBtn.addEventListener('click', () => saveEntry());
 saveKeyBtn.addEventListener('click', saveApiKey);
 textAnalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false }));
-voiceBtn.addEventListener('click', startVoiceInput);
 toggleEditBtn.addEventListener('click', () => {
   clearForm();
   setEditTitle('Nova refeição');
