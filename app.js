@@ -281,7 +281,7 @@ function capitalize(str) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.register('./sw.js');
   } catch (err) {
     console.warn('SW registration failed', err);
   }

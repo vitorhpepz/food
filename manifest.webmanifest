@@ -1,7 +1,7 @@
 {
   "name": "Food Monitor",
   "short_name": "FoodMonitor",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0d1117",
   "theme_color": "#111820"
