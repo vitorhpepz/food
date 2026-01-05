@@ -28,6 +28,12 @@ const fatEl = document.getElementById('fat');
 const caloriesEl = document.getElementById('calories');
 const loadingOverlay = document.getElementById('loading-overlay');
 const loadingText = document.querySelector('#loading-overlay .loading-text');
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importFile = document.getElementById('import-file');
+const backupReminder = document.getElementById('backup-reminder');
+const backupNowBtn = document.getElementById('backup-now-btn');
+const backupLaterBtn = document.getElementById('backup-later-btn');
 
 let editingId = null;
 let selectedDate = new Date().toISOString().slice(0, 10);
@@ -56,6 +62,18 @@ dateFilter.addEventListener('change', () => {
   selectedDate = dateFilter.value || new Date().toISOString().slice(0, 10);
   renderEntries(getEntries());
 });
+exportBtn?.addEventListener('click', exportBackup);
+importBtn?.addEventListener('click', () => importFile?.click());
+importFile?.addEventListener('change', handleImport);
+backupNowBtn?.addEventListener('click', () => {
+  exportBackup();
+  setLastBackupNow();
+  hideBackupReminder();
+});
+backupLaterBtn?.addEventListener('click', () => {
+  setBackupSnooze();
+  hideBackupReminder();
+});
 weightEl.addEventListener('input', recalcFromPer100);
 [protein100El, carbs100El, fat100El, calories100El].forEach(el =>
   el.addEventListener('input', recalcFromPer100)
@@ -75,6 +93,7 @@ entriesEl.addEventListener('click', event => {
 loadEntries();
 loadApiKey();
 dateFilter.value = selectedDate;
+maybeShowBackupReminder();
 registerServiceWorker();
 
 async function analyzeFromText(options = {}) {
@@ -472,6 +491,83 @@ function setEditTitle(text) {
   if (editTitle) {
     editTitle.textContent = text;
   }
+}
+
+function exportBackup() {
+  const entries = getEntries();
+  if (!entries.length) {
+    status('Nada para exportar.');
+    return;
+  }
+  const payload = {
+    meta: {
+      exported_at: new Date().toISOString(),
+      count: entries.length,
+      app: 'nutriA'
+    },
+    entries
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `nutria-backup-${today}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setLastBackupNow();
+  status('Backup salvo (arquivo JSON baixado).');
+}
+
+function handleImport(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const entries = Array.isArray(data.entries) ? data.entries : data;
+      if (!Array.isArray(entries)) throw new Error('Formato inválido');
+      if (!confirm('Substituir registros atuais pelo backup?')) return;
+      localStorage.setItem('food-entries', JSON.stringify(entries));
+      renderEntries(entries);
+      status('Backup importado e aplicado.');
+      setLastBackupNow();
+    } catch (err) {
+      status(`Erro ao importar: ${err.message}`);
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function maybeShowBackupReminder() {
+  if (!backupReminder) return;
+  const entries = getEntries();
+  if (!entries.length) return;
+  const lastBackup = localStorage.getItem('food-last-backup');
+  const snoozeUntil = localStorage.getItem('food-backup-snooze');
+  const now = Date.now();
+  if (snoozeUntil && now < Number(snoozeUntil)) return;
+  if (lastBackup && now - Date.parse(lastBackup) < 7 * 24 * 60 * 60 * 1000) return;
+  backupReminder.classList.remove('hidden');
+}
+
+function hideBackupReminder() {
+  backupReminder?.classList.add('hidden');
+}
+
+function setLastBackupNow() {
+  localStorage.setItem('food-last-backup', new Date().toISOString());
+}
+
+function setBackupSnooze() {
+  const day = 24 * 60 * 60 * 1000;
+  localStorage.setItem('food-backup-snooze', String(Date.now() + day));
 }
 
 function startEditEntry(id) {
