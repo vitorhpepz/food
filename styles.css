@@ -349,6 +349,11 @@ label.button input {
   flex-wrap: wrap;
 }
 
+.entry .actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
 .entry .badge {
   padding: 0.3rem 0.6rem;
   border-radius: 10px;

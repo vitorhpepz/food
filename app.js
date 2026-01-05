@@ -9,6 +9,7 @@ const toggleEditBtn = document.getElementById('toggle-edit-btn');
 const entriesEl = document.getElementById('entries');
 const totalsEl = document.getElementById('totals');
 const editPanel = document.getElementById('edit-panel');
+const dateFilter = document.getElementById('date-filter');
 
 const foodsEl = document.getElementById('foods');
 const weightEl = document.getElementById('weight');
@@ -25,6 +26,7 @@ const loadingOverlay = document.getElementById('loading-overlay');
 const loadingText = document.querySelector('#loading-overlay .loading-text');
 
 let editingId = null;
+let selectedDate = new Date().toISOString().slice(0, 10);
 
 saveBtn.addEventListener('click', () => saveEntry());
 saveKeyBtn.addEventListener('click', saveApiKey);
@@ -33,6 +35,10 @@ voiceBtn.addEventListener('click', startVoiceInput);
 toggleEditBtn.addEventListener('click', () => {
   const collapsed = editPanel.classList.contains('collapsed');
   showEditPanel(collapsed);
+});
+dateFilter.addEventListener('change', () => {
+  selectedDate = dateFilter.value || new Date().toISOString().slice(0, 10);
+  renderEntries(getEntries());
 });
 weightEl.addEventListener('input', recalcFromPer100);
 [protein100El, carbs100El, fat100El, calories100El].forEach(el =>
@@ -43,11 +49,16 @@ entriesEl.addEventListener('click', event => {
   const li = event.target.closest('li.entry');
   if (!li) return;
   const id = Number(li.dataset.id);
+  if (event.target.closest('.delete-btn')) {
+    deleteEntry(id);
+    return;
+  }
   startEditEntry(id);
 });
 
 loadEntries();
 loadApiKey();
+dateFilter.value = selectedDate;
 registerServiceWorker();
 
 async function analyzeFromText(options = {}) {
@@ -74,7 +85,7 @@ async function analyzeFromText(options = {}) {
         {
           role: 'system',
           content:
-            'Você é um assistente de nutrição. Com base apenas no texto, estime macros para a refeição descrita. Se houver peso informado, considere-o para estimar a porção. Responda em português e retorne apenas JSON.'
+            'Você é um assistente de nutrição. Com base apenas no texto, estime macros para a refeição descrita, considerando a tabela TACO. Se houver peso informado, considere-o para estimar a porção. Responda em português e retorne apenas JSON.'
         },
         {
           role: 'user',
@@ -193,9 +204,7 @@ function renderEntries(entries) {
     return;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayEntries = entries.filter(e => (e.createdAt || '').startsWith(today));
-  const targetEntries = todayEntries.length ? todayEntries : entries;
+  const targetEntries = entries.filter(e => (e.createdAt || '').slice(0, 10) === selectedDate);
 
   const totals = { protein: 0, carbs: 0, fat: 0, calories: 0 };
 
@@ -226,7 +235,10 @@ function renderEntries(entries) {
       ${(per100.protein || per100.carbs || per100.fat || per100.calories) ? `
         <div class="per100-line">Por 100g: ${per100.protein ?? '-'}P • ${per100.carbs ?? '-'}C • ${per100.fat ?? '-'}G • ${per100.calories ?? '-'} kcal</div>
       ` : ''}
-      <div class="muted">Toque para editar</div>
+      <div class="actions">
+        <div class="muted">Toque para editar</div>
+        <button class="button danger small delete-btn" type="button">Excluir</button>
+      </div>
     `;
 
     entriesEl.appendChild(li);
@@ -425,6 +437,13 @@ function showEditPanel(show) {
   } else {
     editPanel.classList.add('collapsed');
   }
+}
+
+function deleteEntry(id) {
+  const entries = getEntries().filter(e => e.id !== id);
+  localStorage.setItem('food-entries', JSON.stringify(entries));
+  renderEntries(entries);
+  status('Registro excluído.');
 }
 
 function startEditEntry(id) {
