@@ -57,20 +57,16 @@ let goalsState = loadGoals();
 saveBtn.addEventListener('click', () => saveEntry());
 saveKeyBtn.addEventListener('click', saveApiKey);
 textAnalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false }));
-toggleEditBtn.addEventListener('click', () => {
-  clearForm();
-  setEditTitle('Nova refeição');
-  showEditOverlay(true);
-});
+toggleEditBtn.addEventListener('click', startVoiceInput);
 closeEditBtn.addEventListener('click', () => showEditOverlay(false));
 reanalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false }));
 reapplyBtn.addEventListener('click', () => {
   if (!lastAnalysisData) {
-    status('Nenhuma análise recente para aplicar.');
+    setStatus('Nenhuma análise recente para aplicar.');
     return;
     }
   hydrateFormFromAnalysis(lastAnalysisData);
-  status('Campos atualizados do último resultado.');
+  setStatus('Campos atualizados do último resultado.');
 });
 dateFilter.addEventListener('change', () => {
   selectedDate = dateFilter.value || new Date().toISOString().slice(0, 10);
@@ -88,7 +84,7 @@ closeNutriBtn?.addEventListener('click', () => showNutriOverlay(false));
 nutriSendBtn?.addEventListener('click', () => sendNutriQuestion());
 nutriSaveGoalBtn?.addEventListener('click', () => {
   saveGoalsState();
-  status('Objetivos salvos.');
+  setStatus('Objetivos salvos.');
 });
 reviewDayBtn?.addEventListener('click', () => openNutriWithPeriod('day'));
 reviewWeekBtn?.addEventListener('click', () => openNutriWithPeriod('week'));
@@ -120,13 +116,13 @@ registerServiceWorker();
 async function analyzeFromText(options = {}) {
   const foods = foodsEl.value.trim();
   if (!foods) {
-    status('Descreva os alimentos para recalcular.');
+    setStatus('Descreva os alimentos para recalcular.');
     return;
   }
 
   const apiKey = getApiKey();
   if (!apiKey) {
-    status('Informe sua API key da OpenAI acima.');
+    setStatus('Informe sua API key da OpenAI acima.');
     return;
   }
 
@@ -158,12 +154,12 @@ async function analyzeFromText(options = {}) {
 
     hydrateFormFromAnalysis(data);
     lastAnalysisData = data;
-    status('Macros recalculadas pelo texto.');
+    setStatus('Macros recalculadas pelo texto.');
     if (options.autoSave) {
       saveEntry();
     }
   } catch (err) {
-    status(`Erro: ${err.message}`);
+    setStatus(`Erro: ${err.message}`);
   } finally {
     textAnalyzeBtn.disabled = false;
   }
@@ -228,7 +224,7 @@ function saveEntry() {
   };
 
   if (!entry.foods) {
-    status('Descreva os alimentos antes de salvar.');
+    setStatus('Descreva os alimentos antes de salvar.');
     return;
   }
 
@@ -242,7 +238,7 @@ function saveEntry() {
 
   localStorage.setItem('food-entries', JSON.stringify(entries));
   renderEntries(entries, entry.id);
-  status('Salvo localmente.');
+  setStatus('Salvo localmente.');
   clearForm();
   showEditOverlay(false);
 }
@@ -281,7 +277,7 @@ function renderEntries(entries, highlightId) {
       li.classList.add('new-entry');
     }
     li.dataset.id = entry.id;
-    const date = new Date(entry.createdAt || entry.id).toLocaleString();
+    const date = new Date(entry.createdAt || entry.id).toLocaleString(navigator.language || undefined);
     const per100 = entry.macros100 || {};
     const titleLine = [entry.foods, entry.weightGrams ? `${entry.weightGrams} g` : '', date].filter(Boolean).join(' • ');
 
@@ -382,7 +378,7 @@ function clearForm() {
   editingId = null;
 }
 
-function status(text) {
+function setStatus(text) {
   statusEl.textContent = text;
 }
 
@@ -424,7 +420,7 @@ function backcalcPer100(portionValue, weight) {
 function startVoiceInput() {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) {
-    status('Ditado por voz não é suportado neste navegador.');
+    setStatus('Ditado por voz não é suportado neste navegador.');
     return;
   }
 
@@ -434,7 +430,7 @@ function startVoiceInput() {
   rec.interimResults = false;
 
   rec.onstart = () => setLoading(true, 'Escutando… descreva o prato e o peso.');
-  rec.onerror = event => status(`Erro no ditado: ${event.error || 'desconhecido'}`);
+  rec.onerror = event => setStatus(`Erro no ditado: ${event.error || 'desconhecido'}`);
   rec.onend = () => {
     voiceBtn.disabled = false;
     setLoading(false);
@@ -448,7 +444,7 @@ function startVoiceInput() {
       foodsEl.value = foodsEl.value
         ? `${foodsEl.value.trim()}, ${transcript}`
         : transcript;
-      status('Transcrição adicionada ao campo de alimentos.');
+      setStatus('Transcrição adicionada ao campo de alimentos.');
       analyzeFromText({ autoSave: true });
     }
   };
@@ -513,7 +509,7 @@ function deleteEntry(id) {
   const entries = getEntries().filter(e => e.id !== id);
   localStorage.setItem('food-entries', JSON.stringify(entries));
   renderEntries(entries);
-  status('Registro excluído.');
+  setStatus('Registro excluído.');
 }
 
 function setEditTitle(text) {
@@ -525,7 +521,7 @@ function setEditTitle(text) {
 function exportBackup() {
   const entries = getEntries();
   if (!entries.length) {
-    status('Nada para exportar.');
+    setStatus('Nada para exportar.');
     return;
   }
   const payload = {
@@ -548,7 +544,7 @@ function exportBackup() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   setLastBackupNow();
-  status('Backup salvo (arquivo JSON baixado).');
+  setStatus('Backup salvo (arquivo JSON baixado).');
 }
 
 function handleImport(event) {
@@ -563,10 +559,10 @@ function handleImport(event) {
       if (!confirm('Substituir registros atuais pelo backup?')) return;
       localStorage.setItem('food-entries', JSON.stringify(entries));
       renderEntries(entries);
-      status('Backup importado e aplicado.');
+      setStatus('Backup importado e aplicado.');
       setLastBackupNow();
     } catch (err) {
-      status(`Erro ao importar: ${err.message}`);
+      setStatus(`Erro ao importar: ${err.message}`);
     } finally {
       event.target.value = '';
     }
@@ -663,14 +659,14 @@ function renderGoalsDisplay() {
 function renderDateDisplay() {
   if (!dateDisplay) return;
   const d = selectedDate || new Date().toISOString().slice(0, 10);
-  const pretty = new Date(d).toLocaleDateString();
+  const pretty = new Date(d).toLocaleDateString(navigator.language || undefined);
   dateDisplay.textContent = `Dia: ${pretty}`;
 }
 
 async function sendNutriQuestion() {
   const apiKey = getApiKey();
   if (!apiKey) {
-    status('Informe sua API key da OpenAI acima.');
+    setStatus('Informe sua API key da OpenAI acima.');
     return;
   }
   const period = nutriPeriod?.value || 'day';
@@ -749,5 +745,4 @@ function startEditEntry(id) {
   carbs100El.value = entry.macros100?.carbs ?? '';
   fat100El.value = entry.macros100?.fat ?? '';
   calories100El.value = entry.macros100?.calories ?? '';
-  status('Editando registro selecionado. Salve para aplicar.');
 }
