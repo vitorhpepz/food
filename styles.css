@@ -1,0 +1,264 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --card: #111820;
+  --text: #f5f5f5;
+  --muted: #9da1ad;
+  --accent: #35c48d;
+  --accent-2: #2f8be0;
+  --danger: #f25f5c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 20% 20%, #122038, #0d1117 45%), radial-gradient(circle at 80% 0%, #13221f, #0d1117 40%);
+  color: var(--text);
+  font-family: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 1rem;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.pill {
+  align-self: flex-start;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0d1117;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  max-width: 40ch;
+}
+
+.api-key {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.api-key input {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  background: #0f141c;
+  color: var(--text);
+}
+
+.button.small {
+  width: auto;
+  padding: 0.6rem 0.9rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 0.4rem;
+  font-size: 1.1rem;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+
+.status {
+  min-height: 1.5rem;
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #2a323f;
+  background: #1a212c;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.1s ease, background 0.1s ease;
+  width: 100%;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  border-color: #394357;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button.primary {
+  background: linear-gradient(135deg, var(--accent), #2fa46e);
+  border: none;
+  color: #062315;
+}
+
+.button.secondary {
+  background: #1d2733;
+}
+
+.button.danger {
+  background: #201419;
+  border-color: #3a1c22;
+  color: #fca5a5;
+}
+
+label.button input {
+  display: none;
+}
+
+.preview {
+  margin: 0.7rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #1f2937;
+}
+
+.preview img {
+  width: 100%;
+  display: block;
+}
+
+.hidden {
+  display: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.field label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid #1f2937;
+  background: #0f141c;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.macros .field {
+  min-width: 120px;
+  flex: 1;
+}
+
+.totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.totals .chip {
+  padding: 0.45rem 0.8rem;
+  border-radius: 12px;
+  background: #141c28;
+  border: 1px solid #1f2937;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.entries {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.entry {
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: #0f141c;
+}
+
+.entry .meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.entry .foods {
+  margin: 0.35rem 0;
+  font-weight: 600;
+}
+
+.entry .macros {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.entry .badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+  background: #192234;
+  border: 1px solid #1f2937;
+  font-size: 0.9rem;
+}
+
+@media (min-width: 700px) {
+  main {
+    max-width: 720px;
+    margin: 0 auto 2rem;
+  }
+}
