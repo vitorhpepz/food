@@ -129,15 +129,30 @@
 
     <main>
       <section class="card">
+        <h2>Instruções rápidas</h2>
+        <ol class="instructions">
+          <li>Toque em <strong>Adicionar alimento</strong> para abrir o formulário.</li>
+          <li>Dite ou escreva os alimentos (ex.: 100 g de batata cozida, frango).</li>
+          <li>Use “Recalcular macros (texto)” para preencher macros automáticas.</li>
+          <li>Ajuste peso/macros se necessário e salve.</li>
+          <li>Backup regular: use “Salvar backup” (JSON local).</li>
+        </ol>
+      </section>
+
+      <section class="card">
         <div class="action-buttons">
-          <button id="toggle-edit-btn" class="button primary">Salvar Refeição</button>
+          <button id="toggle-edit-btn" class="button primary">Adicionar alimento</button>
         </div>
         <p id="status" class="status"></p>
       </section>
 
       <section class="card">
-        <div class="field">
-          <input id="date-filter" type="date" />
+        <div class="date-row">
+          <div class="date-display" id="date-display"></div>
+          <div class="action-buttons">
+            <button id="change-day-btn" class="button secondary small" type="button">Mudar dia</button>
+          </div>
+          <input id="date-filter" type="date" class="hidden" />
         </div>
         <div id="totals" class="totals"></div>
         <ul id="entries" class="entries"></ul>

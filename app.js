@@ -33,6 +33,8 @@ const importFile = document.getElementById('import-file');
 const backupReminder = document.getElementById('backup-reminder');
 const backupLaterBtn = document.getElementById('backup-later-btn');
 const backupStatusText = document.getElementById('backup-status-text');
+const dateDisplay = document.getElementById('date-display');
+const changeDayBtn = document.getElementById('change-day-btn');
 const nutriOverlay = document.getElementById('nutri-overlay');
 const closeNutriBtn = document.getElementById('close-nutri-btn');
 const nutriGoal = document.getElementById('nutri-goal');
@@ -73,7 +75,9 @@ reapplyBtn.addEventListener('click', () => {
 dateFilter.addEventListener('change', () => {
   selectedDate = dateFilter.value || new Date().toISOString().slice(0, 10);
   renderEntries(getEntries());
+  renderDateDisplay();
 });
+changeDayBtn?.addEventListener('click', () => dateFilter?.showPicker?.() || dateFilter?.focus());
 exportBtn?.addEventListener('click', exportBackup);
 importBtn?.addEventListener('click', () => importFile?.click());
 importFile?.addEventListener('change', handleImport);
@@ -109,6 +113,7 @@ loadEntries();
 loadApiKey();
 dateFilter.value = selectedDate;
 renderGoalsDisplay();
+renderDateDisplay();
 maybeShowBackupReminder();
 registerServiceWorker();
 
@@ -304,6 +309,11 @@ function renderEntries(entries) {
     fat: 'Gordura',
     calories: 'Calorias'
   };
+
+  const totalsLabel = document.createElement('div');
+  totalsLabel.className = 'muted';
+  totalsLabel.textContent = 'Total do dia';
+  totalsEl.appendChild(totalsLabel);
 
   Object.keys(labels).forEach(key => {
     const chip = document.createElement('div');
@@ -645,6 +655,13 @@ function renderGoalsDisplay() {
   if (goalsState.goal) parts.push(goalsState.goal);
   if (goalsState.goalCustom) parts.push(goalsState.goalCustom);
   goalsDisplay.textContent = parts.length ? `Objetivos: ${parts.join(' • ')}` : 'Objetivos: não definidos.';
+}
+
+function renderDateDisplay() {
+  if (!dateDisplay) return;
+  const d = selectedDate || new Date().toISOString().slice(0, 10);
+  const pretty = new Date(d).toLocaleDateString();
+  dateDisplay.textContent = `Dia: ${pretty}`;
 }
 
 async function sendNutriQuestion() {

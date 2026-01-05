@@ -103,6 +103,19 @@ main {
   color: var(--muted);
 }
 
+.instructions {
+  padding-left: 1.2rem;
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.instructions li strong {
+  color: var(--text);
+}
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -154,6 +167,18 @@ label.button input {
 
 .hidden {
   display: none;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.date-display {
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .field {
