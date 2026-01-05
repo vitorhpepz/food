@@ -6,6 +6,7 @@ const keyStatus = document.getElementById('key-status');
 const textAnalyzeBtn = document.getElementById('text-analyze-btn');
 const voiceBtn = document.getElementById('voice-btn');
 const toggleEditBtn = document.getElementById('toggle-edit-btn');
+const editTitle = document.getElementById('edit-title');
 const entriesEl = document.getElementById('entries');
 const totalsEl = document.getElementById('totals');
 const editOverlay = document.getElementById('edit-overlay');
@@ -35,6 +36,7 @@ textAnalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false
 voiceBtn.addEventListener('click', startVoiceInput);
 toggleEditBtn.addEventListener('click', () => {
   clearForm();
+  setEditTitle('Nova refeição');
   showEditOverlay(true);
 });
 closeEditBtn.addEventListener('click', () => showEditOverlay(false));
@@ -453,11 +455,18 @@ function deleteEntry(id) {
   status('Registro excluído.');
 }
 
+function setEditTitle(text) {
+  if (editTitle) {
+    editTitle.textContent = text;
+  }
+}
+
 function startEditEntry(id) {
   const entries = getEntries();
   const entry = entries.find(e => e.id === id);
   if (!entry) return;
   editingId = id;
+  setEditTitle('Editar refeição');
   showEditOverlay(true);
   foodsEl.value = entry.foods || '';
   weightEl.value = entry.weightGrams ?? '';
