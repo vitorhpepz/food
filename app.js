@@ -8,7 +8,8 @@ const voiceBtn = document.getElementById('voice-btn');
 const toggleEditBtn = document.getElementById('toggle-edit-btn');
 const entriesEl = document.getElementById('entries');
 const totalsEl = document.getElementById('totals');
-const editPanel = document.getElementById('edit-panel');
+const editOverlay = document.getElementById('edit-overlay');
+const closeEditBtn = document.getElementById('close-edit-btn');
 const dateFilter = document.getElementById('date-filter');
 
 const foodsEl = document.getElementById('foods');
@@ -33,9 +34,10 @@ saveKeyBtn.addEventListener('click', saveApiKey);
 textAnalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false }));
 voiceBtn.addEventListener('click', startVoiceInput);
 toggleEditBtn.addEventListener('click', () => {
-  const collapsed = editPanel.classList.contains('collapsed');
-  showEditPanel(collapsed);
+  clearForm();
+  showEditOverlay(true);
 });
+closeEditBtn.addEventListener('click', () => showEditOverlay(false));
 dateFilter.addEventListener('change', () => {
   selectedDate = dateFilter.value || new Date().toISOString().slice(0, 10);
   renderEntries(getEntries());
@@ -430,12 +432,12 @@ function setLoading(isLoading, message = '') {
   }
 }
 
-function showEditPanel(show) {
-  if (!editPanel) return;
+function showEditOverlay(show) {
+  if (!editOverlay) return;
   if (show) {
-    editPanel.classList.remove('collapsed');
+    editOverlay.classList.remove('hidden');
   } else {
-    editPanel.classList.add('collapsed');
+    editOverlay.classList.add('hidden');
   }
 }
 
@@ -451,7 +453,7 @@ function startEditEntry(id) {
   const entry = entries.find(e => e.id === id);
   if (!entry) return;
   editingId = id;
-  showEditPanel(true);
+  showEditOverlay(true);
   foodsEl.value = entry.foods || '';
   weightEl.value = entry.weightGrams ?? '';
   notesEl.value = entry.notes || '';

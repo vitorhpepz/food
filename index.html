@@ -13,24 +13,13 @@
       <div class="spinner"></div>
       <div class="loading-text">Carregando…</div>
     </div>
-    <header>
-      <div class="pill">nutriA</div>
-    </header>
-
-    <main>
-      <section class="card">
-        <div class="field">
-          <div class="field-row">
-            <label for="foods">Alimentos</label>
-            <div class="action-buttons">
-              <button id="voice-btn" class="button primary">Gravar por voz</button>
-              <button id="text-analyze-btn" class="button secondary small">Recalcular macros (texto)</button>
-              <button id="toggle-edit-btn" class="button secondary small">Editar/Add manual</button>
-            </div>
-          </div>
-          <textarea id="foods" rows="3" placeholder="ex: frango grelhado, arroz, brócolis"></textarea>
+    <div id="edit-overlay" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Refeição</h2>
+          <button id="close-edit-btn" class="button secondary small" type="button">Fechar</button>
         </div>
-        <div id="edit-panel" class="edit-panel collapsed">
+        <div class="modal-body">
           <div class="row">
             <div class="field">
               <label for="weight">Peso (g)</label>
@@ -79,6 +68,25 @@
             </div>
           </div>
           <button id="save-btn" class="button primary">Salvar refeição</button>
+        </div>
+      </div>
+    </div>
+    <header>
+      <div class="pill">nutriA</div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="field">
+          <div class="field-row">
+            <label for="foods">Alimentos</label>
+            <div class="action-buttons">
+              <button id="voice-btn" class="button primary">Gravar por voz</button>
+              <button id="text-analyze-btn" class="button secondary small">Recalcular macros (texto)</button>
+              <button id="toggle-edit-btn" class="button secondary small">Editar/Add manual</button>
+            </div>
+          </div>
+          <textarea id="foods" rows="3" placeholder="ex: frango grelhado, arroz, brócolis"></textarea>
         </div>
         <p id="status" class="status"></p>
       </section>

@@ -234,7 +234,8 @@ label.button input {
   flex-wrap: wrap;
 }
 
-.loading-overlay {
+.loading-overlay,
+.modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -247,7 +248,8 @@ label.button input {
   z-index: 999;
 }
 
-.loading-overlay.hidden {
+.loading-overlay.hidden,
+.modal-overlay.hidden {
   display: none;
 }
 
@@ -264,6 +266,31 @@ label.button input {
   color: var(--text);
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.modal {
+  background: var(--card);
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 1rem;
+  width: min(720px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .field label {

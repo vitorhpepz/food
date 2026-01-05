@@ -1,6 +1,6 @@
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open('food-monitor-v7').then(cache =>
+    caches.open('food-monitor-v8').then(cache =>
       cache.addAll([
         './',
         './index.html',
@@ -15,7 +15,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== 'food-monitor-v7').map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== 'food-monitor-v8').map(k => caches.delete(k)))
     )
   );
 });
