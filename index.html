@@ -137,7 +137,6 @@
 
       <section class="card">
         <div class="field">
-          <label for="date-filter">Dia</label>
           <input id="date-filter" type="date" />
         </div>
         <div id="totals" class="totals"></div>
@@ -146,7 +145,7 @@
 
       <section class="card">
         <h2>Nutricionista IA</h2>
-        <p class="muted">Revise dias ou períodos, tire dúvidas e salve objetivos. Tudo local; o chat usa sua chave OpenAI.</p>
+        <p class="muted">Revise dias ou períodos, tire dúvidas e salve objetivos.</p>
         <div class="action-buttons">
           <button id="review-day-btn" class="button secondary small">Revisar dia</button>
           <button id="review-week-btn" class="button secondary small">Revisar semana</button>
@@ -166,16 +165,13 @@
       </section>
 
       <section class="card">
-        <h2>Backup</h2>
         <div id="backup-reminder" class="banner hidden">
-          Backup é local; nada vai para servidor. Lembrete semanal.
           <div class="banner-actions">
-            <button id="backup-now-btn" class="button primary small" type="button">Salvar agora</button>
             <button id="backup-later-btn" class="button secondary small" type="button">Lembrar depois</button>
           </div>
         </div>
         <div class="action-buttons">
-          <button id="export-btn" class="button secondary">Salvar backup (JSON)</button>
+          <button id="export-btn" class="button secondary">Salvar backup</button>
           <button id="import-btn" class="button secondary">Importar backup</button>
           <input id="import-file" type="file" accept="application/json" class="hidden" />
         </div>

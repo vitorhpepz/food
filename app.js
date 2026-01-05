@@ -31,7 +31,6 @@ const exportBtn = document.getElementById('export-btn');
 const importBtn = document.getElementById('import-btn');
 const importFile = document.getElementById('import-file');
 const backupReminder = document.getElementById('backup-reminder');
-const backupNowBtn = document.getElementById('backup-now-btn');
 const backupLaterBtn = document.getElementById('backup-later-btn');
 const nutriOverlay = document.getElementById('nutri-overlay');
 const closeNutriBtn = document.getElementById('close-nutri-btn');
@@ -77,11 +76,6 @@ dateFilter.addEventListener('change', () => {
 exportBtn?.addEventListener('click', exportBackup);
 importBtn?.addEventListener('click', () => importFile?.click());
 importFile?.addEventListener('change', handleImport);
-backupNowBtn?.addEventListener('click', () => {
-  exportBackup();
-  setLastBackupNow();
-  hideBackupReminder();
-});
 backupLaterBtn?.addEventListener('click', () => {
   setBackupSnooze();
   hideBackupReminder();
