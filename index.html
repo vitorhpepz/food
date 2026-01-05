@@ -75,6 +75,47 @@
         </div>
       </div>
     </div>
+    <div id="nutri-overlay" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Nutricionista IA</h2>
+          <button id="close-nutri-btn" class="button secondary small" type="button">Fechar</button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label for="nutri-goal">Objetivo</label>
+            <select id="nutri-goal">
+              <option value="">Selecione</option>
+              <option value="perder gordura">Perder gordura</option>
+              <option value="manter peso">Manter peso</option>
+              <option value="ganhar massa magra">Ganhar massa magra</option>
+              <option value="performance esportiva">Performance esportiva</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="nutri-goal-custom">Objetivo específico (opcional)</label>
+            <input id="nutri-goal-custom" type="text" placeholder="ex: cortar 300 kcal/dia, 2g/kg proteína" />
+          </div>
+          <div class="field">
+            <label for="nutri-question">Pergunta / foco</label>
+            <textarea id="nutri-question" rows="3" placeholder="ex: estou com fome à noite, como ajustar?"></textarea>
+          </div>
+          <div class="field">
+            <label for="nutri-period">Período</label>
+            <select id="nutri-period">
+              <option value="day">Dia</option>
+              <option value="week">Semana</option>
+              <option value="month">Mês</option>
+            </select>
+          </div>
+          <div class="action-buttons">
+            <button id="nutri-send-btn" class="button primary">Enviar para IA</button>
+            <button id="nutri-save-goal-btn" class="button secondary">Salvar objetivos</button>
+          </div>
+          <div id="nutri-output" class="muted"></div>
+        </div>
+      </div>
+    </div>
     <header>
       <div class="pill">nutriA</div>
     </header>
@@ -114,6 +155,18 @@
           <button id="import-btn" class="button secondary">Importar backup</button>
           <input id="import-file" type="file" accept="application/json" class="hidden" />
         </div>
+      </section>
+
+      <section class="card">
+        <h2>Nutricionista IA</h2>
+        <p class="muted">Revise dias ou períodos, tire dúvidas e salve objetivos. Tudo local; o chat usa sua chave OpenAI.</p>
+        <div class="action-buttons">
+          <button id="review-day-btn" class="button secondary small">Revisar dia</button>
+          <button id="review-week-btn" class="button secondary small">Revisar semana</button>
+          <button id="review-month-btn" class="button secondary small">Revisar mês</button>
+          <button id="open-nutri-btn" class="button primary small">Perguntar / Objetivos</button>
+        </div>
+        <div id="goals-display" class="muted"></div>
       </section>
 
       <section class="card">

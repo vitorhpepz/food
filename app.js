@@ -34,10 +34,24 @@ const importFile = document.getElementById('import-file');
 const backupReminder = document.getElementById('backup-reminder');
 const backupNowBtn = document.getElementById('backup-now-btn');
 const backupLaterBtn = document.getElementById('backup-later-btn');
+const nutriOverlay = document.getElementById('nutri-overlay');
+const closeNutriBtn = document.getElementById('close-nutri-btn');
+const nutriGoal = document.getElementById('nutri-goal');
+const nutriGoalCustom = document.getElementById('nutri-goal-custom');
+const nutriQuestion = document.getElementById('nutri-question');
+const nutriPeriod = document.getElementById('nutri-period');
+const nutriSendBtn = document.getElementById('nutri-send-btn');
+const nutriSaveGoalBtn = document.getElementById('nutri-save-goal-btn');
+const nutriOutput = document.getElementById('nutri-output');
+const reviewDayBtn = document.getElementById('review-day-btn');
+const reviewWeekBtn = document.getElementById('review-week-btn');
+const reviewMonthBtn = document.getElementById('review-month-btn');
+const goalsDisplay = document.getElementById('goals-display');
 
 let editingId = null;
 let selectedDate = new Date().toISOString().slice(0, 10);
 let lastAnalysisData = null;
+let goalsState = loadGoals();
 
 saveBtn.addEventListener('click', () => saveEntry());
 saveKeyBtn.addEventListener('click', saveApiKey);
@@ -74,6 +88,15 @@ backupLaterBtn?.addEventListener('click', () => {
   setBackupSnooze();
   hideBackupReminder();
 });
+closeNutriBtn?.addEventListener('click', () => showNutriOverlay(false));
+nutriSendBtn?.addEventListener('click', () => sendNutriQuestion());
+nutriSaveGoalBtn?.addEventListener('click', () => {
+  saveGoalsState();
+  status('Objetivos salvos.');
+});
+reviewDayBtn?.addEventListener('click', () => openNutriWithPeriod('day'));
+reviewWeekBtn?.addEventListener('click', () => openNutriWithPeriod('week'));
+reviewMonthBtn?.addEventListener('click', () => openNutriWithPeriod('month'));
 weightEl.addEventListener('input', recalcFromPer100);
 [protein100El, carbs100El, fat100El, calories100El].forEach(el =>
   el.addEventListener('input', recalcFromPer100)
@@ -93,6 +116,7 @@ entriesEl.addEventListener('click', event => {
 loadEntries();
 loadApiKey();
 dateFilter.value = selectedDate;
+renderGoalsDisplay();
 maybeShowBackupReminder();
 registerServiceWorker();
 
@@ -568,6 +592,113 @@ function setLastBackupNow() {
 function setBackupSnooze() {
   const day = 24 * 60 * 60 * 1000;
   localStorage.setItem('food-backup-snooze', String(Date.now() + day));
+}
+
+function openNutriWithPeriod(period) {
+  if (nutriPeriod) nutriPeriod.value = period;
+  showNutriOverlay(true);
+}
+
+function showNutriOverlay(show) {
+  if (!nutriOverlay) return;
+  if (show) {
+    nutriOverlay.classList.remove('hidden');
+    nutriGoal.value = goalsState.goal || '';
+    nutriGoalCustom.value = goalsState.goalCustom || '';
+    nutriQuestion.value = '';
+    nutriOutput.textContent = '';
+  } else {
+    nutriOverlay.classList.add('hidden');
+  }
+}
+
+function saveGoalsState() {
+  goalsState = {
+    goal: nutriGoal.value,
+    goalCustom: nutriGoalCustom.value
+  };
+  localStorage.setItem('nutria-goals', JSON.stringify(goalsState));
+  renderGoalsDisplay();
+}
+
+function loadGoals() {
+  try {
+    return JSON.parse(localStorage.getItem('nutria-goals') || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+
+function renderGoalsDisplay() {
+  if (!goalsDisplay) return;
+  const parts = [];
+  if (goalsState.goal) parts.push(goalsState.goal);
+  if (goalsState.goalCustom) parts.push(goalsState.goalCustom);
+  goalsDisplay.textContent = parts.length ? `Objetivos: ${parts.join(' • ')}` : 'Objetivos: não definidos.';
+}
+
+async function sendNutriQuestion() {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    status('Informe sua API key da OpenAI acima.');
+    return;
+  }
+  const period = nutriPeriod?.value || 'day';
+  const question = nutriQuestion?.value?.trim() || 'Faça uma revisão do período.';
+  saveGoalsState();
+
+  const entries = getEntriesForPeriod(period);
+  const summary = entries
+    .map(e => {
+      const date = (e.createdAt || e.id || '').slice(0, 10);
+      return `${date}: ${e.foods} (${e.weightGrams || '-'} g) P:${e.macros?.protein || '-'} C:${e.macros?.carbs || '-'} G:${e.macros?.fat || '-'} Cal:${e.macros?.calories || '-'}`;
+    })
+    .join('\n');
+
+  try {
+    const data = await sendOpenAi(
+      [
+        {
+          role: 'system',
+          content:
+            'Você é uma nutricionista que segue a tabela TACO. Dê feedback prático, sucinto, em português, com foco em ajustes de macros e hábitos.'
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Objetivo: ${goalsState.goal || 'não definido'} ${goalsState.goalCustom || ''}\nPeríodo: ${period}\nPergunta: ${question}\nRegistros:\n${summary || 'sem registros'}.`
+            }
+          ]
+        }
+      ],
+      apiKey,
+      'Analisando com nutricionista IA…'
+    );
+
+    const answer = typeof data === 'string' ? data : JSON.stringify(data);
+    nutriOutput.textContent = data.raw || data.answer || answer;
+  } catch (err) {
+    nutriOutput.textContent = `Erro: ${err.message}`;
+  }
+}
+
+function getEntriesForPeriod(period) {
+  const all = getEntries();
+  if (!all.length) return [];
+  const today = selectedDate || new Date().toISOString().slice(0, 10);
+  const start = new Date(today);
+  if (period === 'week') {
+    start.setDate(start.getDate() - 6);
+  } else if (period === 'month') {
+    start.setDate(start.getDate() - 29);
+  }
+  const startStr = start.toISOString().slice(0, 10);
+  return all.filter(e => {
+    const d = (e.createdAt || '').slice(0, 10);
+    return d >= startStr && d <= today;
+  });
 }
 
 function startEditEntry(id) {

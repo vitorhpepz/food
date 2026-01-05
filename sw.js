@@ -1,6 +1,6 @@
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open('food-monitor-v13').then(cache =>
+    caches.open('food-monitor-v14').then(cache =>
       cache.addAll([
         './',
         './index.html',

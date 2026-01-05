@@ -312,6 +312,14 @@ label.button input {
   gap: 0.5rem;
 }
 
+#nutri-output {
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: #0f141c;
+  min-height: 60px;
+}
+
 .field label {
   color: var(--muted);
   font-size: 0.9rem;
