@@ -66,6 +66,38 @@ header {
   padding: 0.6rem 0.9rem;
 }
 
+.loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.loading .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: bounce 0.8s infinite alternate;
+}
+
+.loading .dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.loading .dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes bounce {
+  from {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
 .muted {
   color: var(--muted);
   font-size: 0.9rem;

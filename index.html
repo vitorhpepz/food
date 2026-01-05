@@ -11,7 +11,7 @@
   <body>
     <header>
       <div class="pill">nutrIA</div>
-      <p class="subtitle">Fotografe, dite ou escreva; detecta peso na balança e registra macros. Funciona offline (análise precisa de conexão).</p>
+      <p class="subtitle">Dite ou escreva; detecta peso e registra macros. Funciona offline (análise precisa de conexão).</p>
       <div class="api-key">
         <input id="api-key" type="password" placeholder="Informe a API key da OpenAI (guardada localmente)" />
         <button id="save-key-btn" class="button primary small">Salvar chave</button>
@@ -21,31 +21,17 @@
 
     <main>
       <section class="card">
-        <h2>1) Capturar</h2>
-        <p class="hint">Use a câmera do celular. Só a foto atual vai para a OpenAI, nada é salvo em servidor.</p>
-        <label class="button primary">
-          <input id="photo-input" type="file" accept="image/*" capture="environment" />
-          Tirar / escolher foto
-        </label>
-        <div id="preview" class="preview hidden">
-          <img id="preview-img" alt="Prévia do prato" />
-        </div>
-        <button id="analyze-btn" class="button secondary" disabled>Analisar foto</button>
-        <p id="status" class="status"></p>
-      </section>
-
-      <section class="card">
-        <h2>2) Revisar e editar</h2>
-          <div class="field">
-            <div class="field-row">
-              <label for="foods">Alimentos</label>
-              <div class="action-buttons">
-                <button id="voice-btn" class="button secondary small">Ditado por voz</button>
-                <button id="text-analyze-btn" class="button secondary small">Recalcular macros (texto)</button>
-              </div>
+        <h2>1) Registrar refeição</h2>
+        <div class="field">
+          <div class="field-row">
+            <label for="foods">Alimentos</label>
+            <div class="action-buttons">
+              <button id="voice-btn" class="button primary">Gravar por voz</button>
+              <button id="text-analyze-btn" class="button secondary small">Recalcular macros (texto)</button>
             </div>
-            <textarea id="foods" rows="3" placeholder="ex: frango grelhado, arroz, brócolis"></textarea>
           </div>
+          <textarea id="foods" rows="3" placeholder="ex: frango grelhado, arroz, brócolis"></textarea>
+        </div>
         <div class="row">
           <div class="field">
             <label for="weight">Peso (g)</label>
@@ -94,10 +80,11 @@
           </div>
         </div>
         <button id="save-btn" class="button primary">Salvar registro</button>
+        <p id="status" class="status"></p>
       </section>
 
       <section class="card">
-        <h2>3) Hoje</h2>
+        <h2>2) Hoje</h2>
         <div id="totals" class="totals"></div>
         <ul id="entries" class="entries"></ul>
         <button id="clear-btn" class="button danger">Apagar tudo (local)</button>

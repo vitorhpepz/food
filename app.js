@@ -1,7 +1,3 @@
-const photoInput = document.getElementById('photo-input');
-const preview = document.getElementById('preview');
-const previewImg = document.getElementById('preview-img');
-const analyzeBtn = document.getElementById('analyze-btn');
 const saveBtn = document.getElementById('save-btn');
 const clearBtn = document.getElementById('clear-btn');
 const statusEl = document.getElementById('status');
@@ -25,82 +21,30 @@ const carbsEl = document.getElementById('carbs');
 const fatEl = document.getElementById('fat');
 const caloriesEl = document.getElementById('calories');
 
-let currentImageData = null;
+let editingId = null;
 
-photoInput.addEventListener('change', handlePhoto);
-analyzeBtn.addEventListener('click', analyzePhoto);
-saveBtn.addEventListener('click', saveEntry);
+saveBtn.addEventListener('click', () => saveEntry());
 clearBtn.addEventListener('click', clearAll);
 saveKeyBtn.addEventListener('click', saveApiKey);
-textAnalyzeBtn.addEventListener('click', analyzeFromText);
+textAnalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false }));
 voiceBtn.addEventListener('click', startVoiceInput);
 weightEl.addEventListener('input', recalcFromPer100);
 [protein100El, carbs100El, fat100El, calories100El].forEach(el =>
   el.addEventListener('input', recalcFromPer100)
 );
 
+entriesEl.addEventListener('click', event => {
+  const li = event.target.closest('li.entry');
+  if (!li) return;
+  const id = Number(li.dataset.id);
+  startEditEntry(id);
+});
+
 loadEntries();
 loadApiKey();
 registerServiceWorker();
 
-function handlePhoto(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    currentImageData = reader.result;
-    previewImg.src = currentImageData;
-    preview.classList.remove('hidden');
-    analyzeBtn.disabled = false;
-    status('');
-  };
-  reader.readAsDataURL(file);
-}
-
-async function analyzePhoto() {
-  if (!currentImageData) {
-    status('Adicione uma foto primeiro.');
-    return;
-  }
-
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    status('Informe sua API key da OpenAI acima.');
-    return;
-  }
-
-  analyzeBtn.disabled = true;
-  status('Perguntando para a OpenAI…');
-
-  try {
-    const data = await sendOpenAi([
-      {
-        role: 'system',
-        content:
-          'Você é um assistente de nutrição. Dada uma foto de comida (geralmente em uma balança), extraia o peso visível em gramas e identifique os alimentos com uma nota curta. Estime macros para a porção da foto. Responda em português. Retorne apenas JSON.'
-      },
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: 'Analise a refeição nesta foto. Retorne SOMENTE JSON com: items (array de {name, note}), weight_grams (número ou null), macros ({protein, carbs, fat, calories}), confidence (0-1).'
-          },
-          { type: 'image_url', image_url: { url: currentImageData } }
-        ]
-      }
-    ], apiKey);
-    hydrateFormFromAnalysis(data);
-    status('Analisado. Revise e ajuste se precisar.');
-  } catch (err) {
-    status(`Erro: ${err.message}`);
-  } finally {
-    analyzeBtn.disabled = false;
-  }
-}
-
-async function analyzeFromText() {
+async function analyzeFromText(options = {}) {
   const foods = foodsEl.value.trim();
   if (!foods) {
     status('Descreva os alimentos para recalcular.');
@@ -114,7 +58,7 @@ async function analyzeFromText() {
   }
 
   textAnalyzeBtn.disabled = true;
-  status('Recalculando macros pelo texto…');
+  setLoading(true, 'Recalculando macros pelo texto…');
 
   const weight = numberOrNull(weightEl.value);
 
@@ -141,19 +85,30 @@ async function analyzeFromText() {
 
     hydrateFormFromAnalysis(data);
     status('Macros recalculadas pelo texto.');
+    if (options.autoSave) {
+      saveEntry();
+    }
   } catch (err) {
     status(`Erro: ${err.message}`);
   } finally {
     textAnalyzeBtn.disabled = false;
+    setLoading(false);
   }
 }
 
 function hydrateFormFromAnalysis(data) {
   const items = data.items || data.raw?.items || [];
   const foods = items.map(item => item.name || '').filter(Boolean).join(', ');
-  foodsEl.value = foods;
-  weightEl.value = data.weight_grams ?? '';
-  notesEl.value = items.map(i => i.note).filter(Boolean).join(' • ');
+  if (foods) {
+    foodsEl.value = foods;
+  }
+  if (data.weight_grams != null && Number.isFinite(Number(data.weight_grams))) {
+    weightEl.value = data.weight_grams;
+  }
+  const incomingNotes = items.map(i => i.note).filter(Boolean).join(' • ');
+  if (incomingNotes) {
+    notesEl.value = incomingNotes;
+  }
   proteinEl.value = data.macros?.protein ?? '';
   carbsEl.value = data.macros?.carbs ?? '';
   fatEl.value = data.macros?.fat ?? '';
@@ -170,8 +125,10 @@ function hydrateFormFromAnalysis(data) {
 
 function saveEntry() {
   const entry = {
-    id: Date.now(),
-    createdAt: new Date().toISOString(),
+    id: editingId || Date.now(),
+    createdAt: editingId
+      ? getEntries().find(e => e.id === editingId)?.createdAt || new Date().toISOString()
+      : new Date().toISOString(),
     foods: foodsEl.value.trim(),
     weightGrams: numberOrNull(weightEl.value),
     macros: {
@@ -189,7 +146,13 @@ function saveEntry() {
   }
 
   const entries = getEntries();
-  entries.unshift(entry);
+  const existingIndex = entries.findIndex(e => e.id === entry.id);
+  if (existingIndex >= 0) {
+    entries[existingIndex] = entry;
+  } else {
+    entries.unshift(entry);
+  }
+
   localStorage.setItem('food-entries', JSON.stringify(entries));
   renderEntries(entries);
   status('Salvo localmente.');
@@ -232,6 +195,7 @@ function renderEntries(entries) {
 
     const li = document.createElement('li');
     li.className = 'entry';
+    li.dataset.id = entry.id;
     const date = new Date(entry.createdAt || entry.id).toLocaleString();
 
     li.innerHTML = `
@@ -243,6 +207,7 @@ function renderEntries(entries) {
         ${renderBadge('Gordura', entry.macros?.fat)}
         ${renderBadge('Calorias', entry.macros?.calories)}
       </div>
+      <div class="muted">Toque para editar</div>
     `;
 
     entriesEl.appendChild(li);
@@ -292,7 +257,6 @@ function loadApiKey() {
   apiKeyInput.value = key;
   if (key) {
     keyStatus.textContent = 'Chave recuperada do armazenamento local.';
-    analyzeBtn.disabled = false;
   }
 }
 
@@ -317,10 +281,7 @@ function clearForm() {
   carbs100El.value = '';
   fat100El.value = '';
   calories100El.value = '';
-  preview.classList.add('hidden');
-  photoInput.value = '';
-  currentImageData = null;
-  analyzeBtn.disabled = true;
+  editingId = null;
 }
 
 function status(text) {
@@ -374,10 +335,11 @@ function startVoiceInput() {
   rec.continuous = false;
   rec.interimResults = false;
 
-  rec.onstart = () => status('Escutando… descreva o prato e o peso.');
+  rec.onstart = () => setLoading(true, 'Escutando… descreva o prato e o peso.');
   rec.onerror = event => status(`Erro no ditado: ${event.error || 'desconhecido'}`);
   rec.onend = () => {
     voiceBtn.disabled = false;
+    setLoading(false);
   };
   rec.onresult = event => {
     const transcript = Array.from(event.results)
@@ -389,6 +351,7 @@ function startVoiceInput() {
         ? `${foodsEl.value.trim()}, ${transcript}`
         : transcript;
       status('Transcrição adicionada ao campo de alimentos.');
+      analyzeFromText({ autoSave: true });
     }
   };
 
@@ -425,4 +388,27 @@ async function sendOpenAi(messages, apiKey) {
   }
 
   return data;
+}
+
+function setLoading(isLoading, message = '') {
+  if (isLoading) {
+    statusEl.innerHTML = `<span class="loading">${message || ''} <span class="dot"></span><span class="dot"></span><span class="dot"></span></span>`;
+  } else {
+    statusEl.textContent = '';
+  }
+}
+
+function startEditEntry(id) {
+  const entries = getEntries();
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  editingId = id;
+  foodsEl.value = entry.foods || '';
+  weightEl.value = entry.weightGrams ?? '';
+  notesEl.value = entry.notes || '';
+  proteinEl.value = entry.macros?.protein ?? '';
+  carbsEl.value = entry.macros?.carbs ?? '';
+  fatEl.value = entry.macros?.fat ?? '';
+  caloriesEl.value = entry.macros?.calories ?? '';
+  status('Editando registro selecionado. Salve para aplicar.');
 }
