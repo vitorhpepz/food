@@ -1,6 +1,6 @@
 {
-  "name": "Food Monitor",
-  "short_name": "FoodMonitor",
+  "name": "nutrIA",
+  "short_name": "nutrIA",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0d1117",

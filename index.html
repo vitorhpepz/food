@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Monitor de Comida</title>
+    <title>nutrIA</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#111820" />
     <link rel="stylesheet" href="./styles.css" />
@@ -11,8 +11,8 @@
   <body>
     <div class="deploy-tag">Versão publicada: 2025-01-05 14:45 UTC</div>
     <header>
-      <div class="pill">Monitor de Comida</div>
-      <p class="subtitle">Fotografe, detecte o peso na balança, registre macros. Funciona offline (análise precisa de conexão).</p>
+      <div class="pill">nutrIA</div>
+      <p class="subtitle">Fotografe, dite ou escreva; detecta peso na balança e registra macros. Funciona offline (análise precisa de conexão).</p>
       <div class="api-key">
         <input id="api-key" type="password" placeholder="Informe a API key da OpenAI (guardada localmente)" />
         <button id="save-key-btn" class="button primary small">Salvar chave</button>
@@ -37,13 +37,16 @@
 
       <section class="card">
         <h2>2) Revisar e editar</h2>
-        <div class="field">
-          <div class="field-row">
-            <label for="foods">Alimentos</label>
-            <button id="text-analyze-btn" class="button secondary small">Recalcular macros (texto)</button>
+          <div class="field">
+            <div class="field-row">
+              <label for="foods">Alimentos</label>
+              <div class="action-buttons">
+                <button id="voice-btn" class="button secondary small">Ditado por voz</button>
+                <button id="text-analyze-btn" class="button secondary small">Recalcular macros (texto)</button>
+              </div>
+            </div>
+            <textarea id="foods" rows="3" placeholder="ex: frango grelhado, arroz, brócolis"></textarea>
           </div>
-          <textarea id="foods" rows="3" placeholder="ex: frango grelhado, arroz, brócolis"></textarea>
-        </div>
         <div class="row">
           <div class="field">
             <label for="weight">Peso (g)</label>

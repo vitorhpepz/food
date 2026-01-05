@@ -9,6 +9,7 @@ const apiKeyInput = document.getElementById('api-key');
 const saveKeyBtn = document.getElementById('save-key-btn');
 const keyStatus = document.getElementById('key-status');
 const textAnalyzeBtn = document.getElementById('text-analyze-btn');
+const voiceBtn = document.getElementById('voice-btn');
 const entriesEl = document.getElementById('entries');
 const totalsEl = document.getElementById('totals');
 
@@ -32,6 +33,7 @@ saveBtn.addEventListener('click', saveEntry);
 clearBtn.addEventListener('click', clearAll);
 saveKeyBtn.addEventListener('click', saveApiKey);
 textAnalyzeBtn.addEventListener('click', analyzeFromText);
+voiceBtn.addEventListener('click', startVoiceInput);
 weightEl.addEventListener('input', recalcFromPer100);
 [protein100El, carbs100El, fat100El, calories100El].forEach(el =>
   el.addEventListener('input', recalcFromPer100)
@@ -358,6 +360,40 @@ function backcalcPer100(portionValue, weight) {
   const n = Number(portionValue);
   if (!Number.isFinite(n) || !weight) return '';
   return +(n / weight * 100).toFixed(1);
+}
+
+function startVoiceInput() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) {
+    status('Ditado por voz não é suportado neste navegador.');
+    return;
+  }
+
+  const rec = new Recognition();
+  rec.lang = 'pt-BR';
+  rec.continuous = false;
+  rec.interimResults = false;
+
+  rec.onstart = () => status('Escutando… descreva o prato e o peso.');
+  rec.onerror = event => status(`Erro no ditado: ${event.error || 'desconhecido'}`);
+  rec.onend = () => {
+    voiceBtn.disabled = false;
+  };
+  rec.onresult = event => {
+    const transcript = Array.from(event.results)
+      .map(r => r[0].transcript)
+      .join(' ')
+      .trim();
+    if (transcript) {
+      foodsEl.value = foodsEl.value
+        ? `${foodsEl.value.trim()}, ${transcript}`
+        : transcript;
+      status('Transcrição adicionada ao campo de alimentos.');
+    }
+  };
+
+  voiceBtn.disabled = true;
+  rec.start();
 }
 
 async function sendOpenAi(messages, apiKey) {
