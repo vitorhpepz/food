@@ -26,10 +26,11 @@ header {
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  align-items: center;
 }
 
 .pill {
-  align-self: flex-start;
+  align-self: center;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #0d1117;
   padding: 0.4rem 0.9rem;

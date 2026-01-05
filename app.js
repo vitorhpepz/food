@@ -283,10 +283,10 @@ function renderEntries(entries) {
     li.dataset.id = entry.id;
     const date = new Date(entry.createdAt || entry.id).toLocaleString();
     const per100 = entry.macros100 || {};
+    const titleLine = [entry.foods, entry.weightGrams ? `${entry.weightGrams} g` : '', date].filter(Boolean).join(' • ');
 
     li.innerHTML = `
-      <div class="meta">${entry.weightGrams ? `<strong>${entry.weightGrams} g</strong> • ` : ''}${date}</div>
-      <div class="foods">${entry.foods}</div>
+      <div class="meta">${titleLine}</div>
       ${entry.notes ? `<div class="notes">${entry.notes}</div>` : ''}
       <div class="macros">
         ${renderBadge('Proteína', entry.macros?.protein)}
