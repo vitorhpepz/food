@@ -44,6 +44,10 @@ header {
   max-width: 40ch;
 }
 
+.edit-panel.collapsed {
+  display: none;
+}
+
 .api-key {
   display: flex;
   gap: 0.5rem;
@@ -322,14 +326,21 @@ label.button input {
 }
 
 .entry .meta {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-bottom: 0.35rem;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
 }
 
 .entry .foods {
   margin: 0.35rem 0;
   font-weight: 600;
+}
+
+.entry .notes {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.15rem 0 0.4rem;
 }
 
 .entry .macros {

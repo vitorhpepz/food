@@ -1,13 +1,14 @@
 const saveBtn = document.getElementById('save-btn');
-const clearBtn = document.getElementById('clear-btn');
 const statusEl = document.getElementById('status');
 const apiKeyInput = document.getElementById('api-key');
 const saveKeyBtn = document.getElementById('save-key-btn');
 const keyStatus = document.getElementById('key-status');
 const textAnalyzeBtn = document.getElementById('text-analyze-btn');
 const voiceBtn = document.getElementById('voice-btn');
+const toggleEditBtn = document.getElementById('toggle-edit-btn');
 const entriesEl = document.getElementById('entries');
 const totalsEl = document.getElementById('totals');
+const editPanel = document.getElementById('edit-panel');
 
 const foodsEl = document.getElementById('foods');
 const weightEl = document.getElementById('weight');
@@ -26,10 +27,13 @@ const loadingText = document.querySelector('#loading-overlay .loading-text');
 let editingId = null;
 
 saveBtn.addEventListener('click', () => saveEntry());
-clearBtn.addEventListener('click', clearAll);
 saveKeyBtn.addEventListener('click', saveApiKey);
 textAnalyzeBtn.addEventListener('click', () => analyzeFromText({ autoSave: false }));
 voiceBtn.addEventListener('click', startVoiceInput);
+toggleEditBtn.addEventListener('click', () => {
+  const collapsed = editPanel.classList.contains('collapsed');
+  showEditPanel(collapsed);
+});
 weightEl.addEventListener('input', recalcFromPer100);
 [protein100El, carbs100El, fat100El, calories100El].forEach(el =>
   el.addEventListener('input', recalcFromPer100)
@@ -170,13 +174,10 @@ function saveEntry() {
   renderEntries(entries);
   status('Salvo localmente.');
   clearForm();
+  showEditPanel(false);
 }
 
 function clearAll() {
-  if (!confirm('Apagar todos os registros locais?')) return;
-  localStorage.removeItem('food-entries');
-  renderEntries([]);
-  status('Tudo apagado.');
 }
 
 function loadEntries() {
@@ -215,7 +216,7 @@ function renderEntries(entries) {
     li.innerHTML = `
       <div class="meta">${entry.weightGrams ? `<strong>${entry.weightGrams} g</strong> • ` : ''}${date}</div>
       <div class="foods">${entry.foods}</div>
-      ${entry.notes ? `<div class="muted">${entry.notes}</div>` : ''}
+      ${entry.notes ? `<div class="notes">${entry.notes}</div>` : ''}
       <div class="macros">
         ${renderBadge('Proteína', entry.macros?.protein)}
         ${renderBadge('Carbo', entry.macros?.carbs)}
@@ -417,11 +418,21 @@ function setLoading(isLoading, message = '') {
   }
 }
 
+function showEditPanel(show) {
+  if (!editPanel) return;
+  if (show) {
+    editPanel.classList.remove('collapsed');
+  } else {
+    editPanel.classList.add('collapsed');
+  }
+}
+
 function startEditEntry(id) {
   const entries = getEntries();
   const entry = entries.find(e => e.id === id);
   if (!entry) return;
   editingId = id;
+  showEditPanel(true);
   foodsEl.value = entry.foods || '';
   weightEl.value = entry.weightGrams ?? '';
   notesEl.value = entry.notes || '';
