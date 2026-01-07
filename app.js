@@ -1,5 +1,4 @@
 const saveBtn = document.getElementById('save-btn');
-const statusEl = document.getElementById('status');
 const apiKeyInput = document.getElementById('api-key');
 const saveKeyBtn = document.getElementById('save-key-btn');
 const keyStatus = document.getElementById('key-status');
@@ -50,7 +49,7 @@ const reviewMonthBtn = document.getElementById('review-month-btn');
 const goalsDisplay = document.getElementById('goals-display');
 
 let editingId = null;
-let selectedDate = new Date().toISOString().slice(0, 10);
+let selectedDate = formatDateInput(new Date());
 let lastAnalysisData = null;
 let goalsState = loadGoals();
 
@@ -69,7 +68,7 @@ reapplyBtn.addEventListener('click', () => {
   setStatus('Campos atualizados do último resultado.');
 });
 dateFilter.addEventListener('change', () => {
-  selectedDate = dateFilter.value || new Date().toISOString().slice(0, 10);
+  selectedDate = dateFilter.value || formatDateInput(new Date());
   renderEntries(getEntries());
   renderDateDisplay();
 });
@@ -174,6 +173,7 @@ async function analyzeFromText(options = {}) {
   } catch (err) {
     setStatus(`Erro: ${err.message}`);
   } finally {
+    setLoading(false);
     textAnalyzeBtn.disabled = false;
   }
 }
@@ -211,7 +211,7 @@ function hydrateFormFromAnalysis(data) {
 }
 
 function saveEntry() {
-  const entryDate = selectedDate || new Date().toISOString().slice(0, 10);
+  const entryDate = selectedDate || formatDateInput(new Date());
   const entryCreatedAt = editingId
     ? getEntries().find(e => e.id === editingId)?.createdAt
     : new Date(`${entryDate}T00:00:00`).toISOString();
@@ -391,9 +391,7 @@ function clearForm() {
   editingId = null;
 }
 
-function setStatus(text) {
-  statusEl.textContent = text;
-}
+function setStatus() {}
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -431,6 +429,7 @@ function backcalcPer100(portionValue, weight) {
 }
 
 function startVoiceInput() {
+  const voiceBtn = toggleEditBtn;
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) {
     setStatus('Ditado por voz não é suportado neste navegador.');
@@ -441,12 +440,15 @@ function startVoiceInput() {
   rec.lang = 'pt-BR';
   rec.continuous = false;
   rec.interimResults = false;
+  let analysisStarted = false;
 
   rec.onstart = () => setLoading(true, 'Escutando… descreva o prato e o peso.');
   rec.onerror = event => setStatus(`Erro no ditado: ${event.error || 'desconhecido'}`);
   rec.onend = () => {
-    voiceBtn.disabled = false;
-    setLoading(false);
+    if (voiceBtn) voiceBtn.disabled = false;
+    if (!analysisStarted) {
+      setLoading(false);
+    }
   };
   rec.onresult = event => {
     const transcript = Array.from(event.results)
@@ -458,15 +460,16 @@ function startVoiceInput() {
         ? `${foodsEl.value.trim()}, ${transcript}`
         : transcript;
       setStatus('Transcrição adicionada ao campo de alimentos.');
-      analyzeFromText({ autoSave: true });
+      analysisStarted = true;
+      analyzeFromText({ autoSave: true }).finally(() => setLoading(false));
     }
   };
 
-  voiceBtn.disabled = true;
+  if (voiceBtn) voiceBtn.disabled = true;
   rec.start();
 }
 
-async function sendOpenAi(messages, apiKey, loadingMessage = 'Analisando na OpenAI…') {
+async function sendOpenAi(messages, apiKey, loadingMessage = 'Salvando...') {
   setLoading(true, loadingMessage);
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -482,13 +485,11 @@ async function sendOpenAi(messages, apiKey, loadingMessage = 'Analisando na Open
   });
 
   if (!response.ok) {
-    setLoading(false);
     const errText = await response.text();
     throw new Error(errText || 'Falha ao analisar');
   }
 
   const payload = await response.json();
-  setLoading(false);
   const content = payload.choices?.[0]?.message?.content?.trim() || '{}';
   let data = {};
   try {
@@ -628,7 +629,7 @@ function setBackupStatusText(text) {
 
 function addEntriesFromAnalysis(entriesData) {
   const entries = getEntries();
-  const entryDate = selectedDate || new Date().toISOString().slice(0, 10);
+  const entryDate = selectedDate || formatDateInput(new Date());
   let lastId = null;
 
   entriesData.forEach((item, idx) => {
@@ -707,8 +708,8 @@ function renderGoalsDisplay() {
 
 function renderDateDisplay() {
   if (!dateDisplay) return;
-  const d = selectedDate || new Date().toISOString().slice(0, 10);
-  const pretty = new Date(d).toLocaleDateString(navigator.language || undefined);
+  const d = selectedDate || formatDateInput(new Date());
+  const pretty = parseDateInput(d).toLocaleDateString(navigator.language || undefined);
   dateDisplay.textContent = `Dia: ${pretty}`;
 }
 
@@ -756,20 +757,22 @@ async function sendNutriQuestion() {
     nutriOutput.textContent = data.raw || data.answer || answer;
   } catch (err) {
     nutriOutput.textContent = `Erro: ${err.message}`;
+  } finally {
+    setLoading(false);
   }
 }
 
 function getEntriesForPeriod(period) {
   const all = getEntries();
   if (!all.length) return [];
-  const today = selectedDate || new Date().toISOString().slice(0, 10);
-  const start = new Date(today);
+  const today = selectedDate || formatDateInput(new Date());
+  const start = parseDateInput(today);
   if (period === 'week') {
     start.setDate(start.getDate() - 6);
   } else if (period === 'month') {
     start.setDate(start.getDate() - 29);
   }
-  const startStr = start.toISOString().slice(0, 10);
+  const startStr = formatDateInput(start);
   return all.filter(e => {
     const d = (e.createdAt || '').slice(0, 10);
     return d >= startStr && d <= today;
@@ -794,4 +797,18 @@ function startEditEntry(id) {
   carbs100El.value = entry.macros100?.carbs ?? '';
   fat100El.value = entry.macros100?.fat ?? '';
   calories100El.value = entry.macros100?.calories ?? '';
+}
+
+function formatDateInput(dateObj) {
+  const d = dateObj || new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function parseDateInput(value) {
+  if (!value) return new Date();
+  const [y, m, d] = value.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
 }

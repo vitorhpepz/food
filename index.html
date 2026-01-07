@@ -129,17 +129,12 @@
 
     <main>
       <section class="card">
-        <h2>Instruções rápidas</h2>
-        <p class="instructions">
-          Fale alimento por alimento (ex.: 100 g de batata cozida), depois pressione de novo o botão e diga o segundo alimento (ex.: 300 g de arroz).
-        </p>
-      </section>
-
-      <section class="card">
         <div class="action-buttons">
           <button id="toggle-edit-btn" class="button primary">Adicionar alimento (ditar)</button>
         </div>
-        <p id="status" class="status"></p>
+        <p class="instructions">
+          Você pode ditar todos os alimentos de uma vez (ex.: 150 g de frango grelhado, 300 g de arroz, 100 g de brócolis).
+        </p>
       </section>
 
       <section class="card">
@@ -167,23 +162,20 @@
       </section>
 
       <section class="card">
+        <div class="action-buttons">
+          <button id="export-btn" class="button primary small">Salvar backup</button>
+          <button id="import-btn" class="button secondary small">Importar backup</button>
+          <button id="backup-later-btn" class="button secondary small">Lembrar semanalmente / desativar</button>
+          <input id="import-file" type="file" accept="application/json" class="hidden" />
+        </div>
+      </section>
+
+      <section class="card">
         <h2>API</h2>
         <div class="api-key">
           <input id="api-key" type="password" placeholder="Informe a API key da OpenAI (guardada localmente)" />
           <button id="save-key-btn" class="button primary small">Salvar chave</button>
           <span id="key-status" class="muted"></span>
-        </div>
-      </section>
-
-      <section class="card">
-        <div id="backup-reminder" class="banner hidden">
-          <span id="backup-status-text" class="muted"></span>
-        </div>
-        <div class="action-buttons">
-          <button id="export-btn" class="button primary">Salvar backup</button>
-          <button id="import-btn" class="button secondary">Importar backup</button>
-          <button id="backup-later-btn" class="button secondary">Lembrar semanalmente / desativar</button>
-          <input id="import-file" type="file" accept="application/json" class="hidden" />
         </div>
       </section>
     </main>
