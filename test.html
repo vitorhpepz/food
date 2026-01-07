@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>IG Story Share Test (iPhone)</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; padding: 16px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+    button, input[type="text"] { font-size: 16px; padding: 12px; border-radius: 12px; border: 1px solid #ccc; }
+    button { background: #111; color: #fff; border: none; }
+    button.secondary { background: #f2f2f2; color: #111; border: 1px solid #ddd; }
+    #preview { width: 240px; height: 426px; border: 1px solid #ddd; border-radius: 14px; overflow: hidden; }
+    canvas { width: 100%; height: 100%; display: block; }
+    .hint { color: #444; line-height: 1.35; }
+    .status { margin-top: 10px; font-size: 14px; color: #0a7; }
+    .warn { color: #a60; }
+  </style>
+</head>
+<body>
+  <h2>Instagram Story Share Test (iPhone)</h2>
+  <p class="hint">
+    iOS web apps can’t reliably prefill Instagram Stories. This page generates a Story image and tries to share it via the iOS
+    share sheet (best option), with download/open fallbacks.
+  </p>
+
+  <div class="row">
+    <input id="file" type="file" accept="image/*" />
+  </div>
+
+  <div class="row">
+    <input id="phrase" type="text" value="O amor mora nos detalhes" style="flex:1; min-width: 240px;" />
+    <input id="link" type="text" value="https://yourapp.example" style="flex:1; min-width: 240px;" />
+  </div>
+
+  <div class="row">
+    <button id="make">Generate Story</button>
+    <button id="download" class="secondary" disabled>Download Image</button>
+  </div>
+
+  <div class="row">
+    <button id="copy" class="secondary" disabled>Copy Link</button>
+    <button id="shareIg" class="secondary" disabled>Share to Instagram</button>
+    <button id="openIg" class="secondary">Open Instagram</button>
+  </div>
+
+  <div id="preview">
+    <canvas id="c" width="1080" height="1920"></canvas>
+  </div>
+
+  <div id="msg" class="status"></div>
+
+  <script>
+    const fileEl = document.getElementById('file');
+    const phraseEl = document.getElementById('phrase');
+    const linkEl = document.getElementById('link');
+    const makeBtn = document.getElementById('make');
+    const dlBtn = document.getElementById('download');
+    const copyBtn = document.getElementById('copy');
+    const shareIgBtn = document.getElementById('shareIg');
+    const openIgBtn = document.getElementById('openIg');
+    const msg = document.getElementById('msg');
+
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    let lastBlob = null;
+
+    function setMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = 'status' + (kind === 'warn' ? ' warn' : '');
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+      const words = (text || '').trim().split(/\s+/);
+      const lines = [];
+      let line = '';
+      for (const w of words) {
+        const test = line ? (line + ' ' + w) : w;
+        if (ctx.measureText(test).width <= maxWidth) {
+          line = test;
+        } else {
+          if (line) lines.push(line);
+          line = w;
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    async function fileToImage(file) {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      return img;
+    }
+
+    function drawStory(img, phrase, link) {
+      // Background: cover-fit the image into 1080x1920
+      const W = canvas.width, H = canvas.height;
+
+      ctx.clearRect(0, 0, W, H);
+
+      const imgRatio = img.width / img.height;
+      const canvasRatio = W / H;
+
+      let drawW, drawH, dx, dy;
+      if (imgRatio > canvasRatio) {
+        // image is wider -> fit height, crop width
+        drawH = H;
+        drawW = H * imgRatio;
+        dx = (W - drawW) / 2;
+        dy = 0;
+      } else {
+        // image is taller -> fit width, crop height
+        drawW = W;
+        drawH = W / imgRatio;
+        dx = 0;
+        dy = (H - drawH) / 2;
+      }
+
+      ctx.drawImage(img, dx, dy, drawW, drawH);
+
+      // Subtle dark overlay for readability
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(0,0,0,0.10)');
+      grad.addColorStop(0.55, 'rgba(0,0,0,0.10)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Phrase text (top)
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+
+      const padding = 90;
+      const maxWidth = W - padding * 2;
+
+      // Dynamic font sizing
+      let fontSize = 96;
+      ctx.font = `800 ${fontSize}px -apple-system, system-ui, sans-serif`;
+      let lines = wrapText(ctx, phrase, maxWidth);
+      while (lines.length > 4 && fontSize > 56) {
+        fontSize -= 6;
+        ctx.font = `800 ${fontSize}px -apple-system, system-ui, sans-serif`;
+        lines = wrapText(ctx, phrase, maxWidth);
+      }
+
+      // Shadow for contrast
+      ctx.shadowColor = 'rgba(0,0,0,0.45)';
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 6;
+
+      const lineH = Math.round(fontSize * 1.12);
+      let y = 140;
+      for (const line of lines) {
+        ctx.fillText(line, padding, y);
+        y += lineH;
+      }
+
+      // Reset shadow
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Footer badge with link text (not clickable in IG, but visible)
+      const badgeH = 160;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      roundRect(ctx, padding, H - padding - badgeH, W - padding * 2, badgeH, 36);
+      ctx.fill();
+
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+
+      ctx.font = `700 54px -apple-system, system-ui, sans-serif`;
+      ctx.fillText('Open:', padding + 44, H - padding - badgeH/2 - 18);
+
+      ctx.font = `600 46px -apple-system, system-ui, sans-serif`;
+      const linkText = (link || '').replace(/^https?:\/\//, '');
+      ctx.fillText(linkText, padding + 44, H - padding - badgeH/2 + 34);
+
+      // Tiny watermark
+      ctx.globalAlpha = 0.9;
+      ctx.font = `700 34px -apple-system, system-ui, sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('made with yourapp', W - padding, H - 44);
+      ctx.globalAlpha = 1;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+
+    async function canvasToBlob() {
+      return await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    }
+
+    makeBtn.addEventListener('click', async () => {
+      try {
+        const file = fileEl.files?.[0];
+        if (!file) {
+          setMsg('Pick an image first.', 'warn');
+          return;
+        }
+        const img = await fileToImage(file);
+        drawStory(img, phraseEl.value, linkEl.value);
+        lastBlob = await canvasToBlob();
+
+        dlBtn.disabled = false;
+        copyBtn.disabled = false;
+        shareIgBtn.disabled = false;
+
+        setMsg('Story generated. Try Share to Instagram (best on iOS), or Download and add in Instagram.', '');
+      } catch (e) {
+        console.error(e);
+        setMsg('Failed to generate image.', 'warn');
+      }
+    });
+
+    dlBtn.addEventListener('click', async () => {
+      if (!lastBlob) return;
+      const url = URL.createObjectURL(lastBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'story.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      setMsg('Downloaded story.png. Now open Instagram and add it from Photos.', '');
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(linkEl.value);
+        setMsg('Link copied. In Instagram Story, add a Link sticker and paste it.', '');
+      } catch {
+        // iOS can be picky; fallback prompt
+        const t = linkEl.value;
+        window.prompt('Copy this link:', t);
+        setMsg('Use the prompt to copy the link.', '');
+      }
+    });
+
+    shareIgBtn.addEventListener('click', async () => {
+      if (!lastBlob) {
+        setMsg('Generate a story first.', 'warn');
+        return;
+      }
+
+      const file = new File([lastBlob], 'story.png', { type: 'image/png' });
+      if (navigator.share) {
+        try {
+          // Some iOS versions return false for canShare while still supporting files.
+          if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] });
+            setMsg('Share sheet opened. Choose Instagram to add to Stories.', '');
+            return;
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      // Fallback: open Instagram app (no prefill from web)
+      window.location.href = 'instagram://story-camera';
+      setMsg('Opening Instagram. If no prefill, use Share (on iOS Safari) or Download to add from Photos.', 'warn');
+    });
+
+    openIgBtn.addEventListener('click', () => {
+      // Best effort: open Instagram app
+      // iOS may show nothing if blocked; user can still open manually.
+      window.location.href = 'instagram://app';
+      setMsg('Trying to open Instagram… if it didn’t open, open it manually.', '');
+    });
+  </script>
+</body>
+</html>
